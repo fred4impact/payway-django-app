@@ -35,11 +35,39 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-money-bill-wave me-2"></i>Payments
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'account:money_transfer' %}">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Money
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'account:create_payment_request' %}">
+                                    <i class="fas fa-hand-holding-usd me-2"></i>Request Money
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'account:search_account' %}">
+                                    <i class="fas fa-search me-2"></i>Find Account
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'account:transactions' %}">
+                                    <i class="fas fa-history me-2"></i>Transaction History
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'account:payment_requests' %}">
+                                    <i class="fas fa-list me-2"></i>Payment Requests
+                                </a></li>
+                            </ul>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'account:account_info' %}">Account</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'account:kyc' %}">KYC</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'account:notifications' %}">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
