@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}PayWay - Secure Digital Payments{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row align-items-center min-vh-75">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold text-success mb-4">
+            Secure Digital Payments for Everyone
+        </h1>
+        <p class="lead mb-4">
+            PayWay provides a secure, fast, and reliable digital payment platform. 
+            Send money, receive payments, and manage your finances with ease.
+        </p>
+        {% if not user.is_authenticated %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{% url 'userauths:register' %}" class="btn btn-success btn-lg px-4 me-md-2">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a href="{% url 'userauths:login' %}" class="btn btn-outline-success btn-lg px-4">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+            </div>
+        {% else %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{% url 'core:dashboard' %}" class="btn btn-success btn-lg px-4 me-md-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-lg-6">
+        <div class="text-center">
+            <i class="fas fa-wallet text-success" style="font-size: 15rem; opacity: 0.3;"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mt-5 pt-5">
+    <div class="col-12 text-center mb-5">
+        <h2 class="display-5 fw-bold">Why Choose PayWay?</h2>
+        <p class="lead text-muted">Experience the future of digital payments</p>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-shield-alt text-success" style="font-size: 2rem;"></i>
+                </div>
+                <h5 class="card-title">Secure & Safe</h5>
+                <p class="card-text">Bank-level security with encryption and fraud detection to keep your money safe.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-bolt text-success" style="font-size: 2rem;"></i>
+                </div>
+                <h5 class="card-title">Fast & Instant</h5>
+                <p class="card-text">Send and receive money instantly with real-time transaction processing.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-globe text-success" style="font-size: 2rem;"></i>
+                </div>
+                <h5 class="card-title">Global Access</h5>
+                <p class="card-text">Access your account from anywhere in the world with our mobile-friendly platform.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="row mt-5 pt-5">
+    <div class="col-12 text-center mb-5">
+        <h2 class="display-5 fw-bold">Trusted by Millions</h2>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="display-4 fw-bold text-success">10M+</div>
+        <p class="text-muted">Active Users</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="display-4 fw-bold text-success">$50B+</div>
+        <p class="text-muted">Transactions Processed</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="display-4 fw-bold text-success">150+</div>
+        <p class="text-muted">Countries Supported</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="display-4 fw-bold text-success">99.9%</div>
+        <p class="text-muted">Uptime</p>
+    </div>
+</div>
+{% endblock %} 
