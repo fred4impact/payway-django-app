@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Transaction History - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Transaction History
+                    </h4>
+                    <div>
+                        <a href="{% url 'account:money_transfer' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Send Money
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filter Form -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-light">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-filter me-2"></i>
+                                        Filter Transactions
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="get" class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Transaction Type</label>
+                                            {{ form.transaction_type }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Status</label>
+                                            {{ form.status }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Date From</label>
+                                            {{ form.date_from }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Date To</label>
+                                            {{ form.date_to }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Min Amount</label>
+                                            {{ form.min_amount }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Max Amount</label>
+                                            {{ form.max_amount }}
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" name="filter" class="btn btn-primary">
+                                                <i class="fas fa-filter me-1"></i>
+                                                Apply Filters
+                                            </button>
+                                            <button type="submit" name="export" class="btn btn-success">
+                                                <i class="fas fa-download me-1"></i>
+                                                Export CSV
+                                            </button>
+                                            <a href="{% url 'account:transactions' %}" class="btn btn-outline-secondary">
+                                                <i class="fas fa-times me-1"></i>
+                                                Clear Filters
+                                            </a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions List -->
+                    {% if transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Transaction ID</th>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>From/To</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in transactions %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ transaction.transaction_id }}</span>
+                                            </td>
+                                            <td>
+                                                <small>{{ transaction.created_at|date:"M d, Y" }}</small><br>
+                                                <small class="text-muted">{{ transaction.created_at|time:"H:i" }}</small>
+                                            </td>
+                                            <td>
+                                                {% if transaction.transaction_type == 'transfer' %}
+                                                    <span class="badge bg-primary">
+                                                        <i class="fas fa-exchange-alt me-1"></i>
+                                                        Transfer
+                                                    </span>
+                                                {% elif transaction.transaction_type == 'payment_request' %}
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-hand-holding-usd me-1"></i>
+                                                        Payment Request
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ transaction.get_transaction_type_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if transaction.sender == request.user %}
+                                                    <span class="text-danger">
+                                                        -${{ transaction.amount|floatformat:2 }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-success">
+                                                        +${{ transaction.amount|floatformat:2 }}
+                                                    </span>
+                                                {% endif %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    Fee: ${{ transaction.transaction_fee|floatformat:2 }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                {% if transaction.sender == request.user %}
+                                                    <small class="text-muted">To:</small><br>
+                                                    <strong>{{ transaction.receiver.get_full_name|default:transaction.receiver.email }}</strong>
+                                                {% else %}
+                                                    <small class="text-muted">From:</small><br>
+                                                    <strong>{{ transaction.sender.get_full_name|default:transaction.sender.email }}</strong>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if transaction.status == 'completed' %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>
+                                                        Completed
+                                                    </span>
+                                                {% elif transaction.status == 'pending' %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        Pending
+                                                    </span>
+                                                {% elif transaction.status == 'failed' %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times me-1"></i>
+                                                        Failed
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ transaction.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'account:transaction_detail' transaction.transaction_id %}" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Transaction pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if request.GET.transaction_type %}&transaction_type={{ request.GET.transaction_type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.transaction_type %}&transaction_type={{ request.GET.transaction_type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                                <i class="fas fa-angle-left"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if request.GET.transaction_type %}&transaction_type={{ request.GET.transaction_type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.transaction_type %}&transaction_type={{ request.GET.transaction_type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                                <i class="fas fa-angle-right"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.transaction_type %}&transaction_type={{ request.GET.transaction_type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+
+                        <!-- Summary -->
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-success">${{ total_received|default:0|floatformat:2 }}</h5>
+                                        <small class="text-muted">Total Received</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-danger">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-danger">${{ total_sent|default:0|floatformat:2 }}</h5>
+                                        <small class="text-muted">Total Sent</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-info">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-info">{{ transactions|length }}</h5>
+                                        <small class="text-muted">Total Transactions</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No transactions found</h5>
+                            <p class="text-muted">You haven't made any transactions yet.</p>
+                            <a href="{% url 'account:money_transfer' %}" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Send Your First Payment
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="mb-2">Welcome back, {{ user.get_full_name|default:user.email }}!</h4>
+                            <p class="mb-0">Manage your account, send money, and track your transactions.</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <i class="fas fa-user-circle fa-3x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-success h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-wallet fa-2x text-success mb-3"></i>
+                    <h5 class="card-title">Account Balance</h5>
+                    <h3 class="text-success">${{ user.account.account_balance|floatformat:2 }}</h3>
+                    <p class="text-muted mb-0">Available for transfers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-credit-card fa-2x text-info mb-3"></i>
+                    <h5 class="card-title">Account Number</h5>
+                    <h4 class="text-info">{{ user.account.account_number }}</h4>
+                    <p class="text-muted mb-0">{{ user.account.get_account_type_display }} Account</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-2x text-warning mb-3"></i>
+                    <h5 class="card-title">KYC Status</h5>
+                    {% if user.kyc %}
+                        {% if user.kyc.verification_status == 'approved' %}
+                            <h4 class="text-success">Verified</h4>
+                            <p class="text-muted mb-0">Account fully verified</p>
+                        {% elif user.kyc.verification_status == 'pending' %}
+                            <h4 class="text-warning">Pending</h4>
+                            <p class="text-muted mb-0">Under review</p>
+                        {% else %}
+                            <h4 class="text-danger">Rejected</h4>
+                            <p class="text-muted mb-0">Please resubmit</p>
+                        {% endif %}
+                    {% else %}
+                        <h4 class="text-danger">Not Submitted</h4>
+                        <p class="text-muted mb-0">Complete KYC to unlock features</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'account:money_transfer' %}" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="fas fa-paper-plane fa-2x mb-2"></i>
+                                <span>Send Money</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'account:create_payment_request' %}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                                <span>Request Money</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'account:transactions' %}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="fas fa-history fa-2x mb-2"></i>
+                                <span>Transaction History</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'account:search_account' %}" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="fas fa-search fa-2x mb-2"></i>
+                                <span>Find Account</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Recent Transactions
+                    </h5>
+                    <a href="{% url 'account:transactions' %}" class="btn btn-outline-primary btn-sm">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if user.sent_transactions.all|slice:":5" or user.received_transactions.all|slice:":5" %}
+                        <div class="list-group list-group-flush">
+                            {% for transaction in user.sent_transactions.all|slice:":3" %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-arrow-up text-danger me-2"></i>
+                                            <div>
+                                                <strong>Sent to {{ transaction.receiver.get_full_name|default:transaction.receiver.email }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ transaction.created_at|date:"M d, Y H:i" }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="text-danger">-${{ transaction.amount|floatformat:2 }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ transaction.get_status_display }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                            {% for transaction in user.received_transactions.all|slice:":3" %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-arrow-down text-success me-2"></i>
+                                            <div>
+                                                <strong>Received from {{ transaction.sender.get_full_name|default:transaction.sender.email }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ transaction.created_at|date:"M d, Y H:i" }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="text-success">+${{ transaction.amount|floatformat:2 }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ transaction.get_status_display }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
+                            <h6 class="text-muted">No transactions yet</h6>
+                            <p class="text-muted">Start by sending money to someone!</p>
+                            <a href="{% url 'account:money_transfer' %}" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Send Money
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Payment Requests -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-hand-holding-usd me-2"></i>
+                        Payment Requests
+                    </h6>
+                    <a href="{% url 'account:payment_requests' %}" class="btn btn-outline-primary btn-sm">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if user.received_requests.all|slice:":3" %}
+                        <div class="list-group list-group-flush">
+                            {% for request in user.received_requests.all|slice:":3" %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ request.requester.get_full_name|default:request.requester.email }}</strong>
+                                            <br>
+                                            <small class="text-muted">${{ request.amount|floatformat:2 }}</small>
+                                        </div>
+                                        <span class="badge bg-{% if request.status == 'pending' %}warning{% elif request.status == 'paid' %}success{% else %}secondary{% endif %}">
+                                            {{ request.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No pending requests</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-link me-2"></i>
+                        Quick Links
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'account:account_info' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-user me-2"></i>
+                            Account Information
+                        </a>
+                        {% if not user.kyc %}
+                            <a href="{% url 'account:kyc' %}" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-id-card me-2"></i>
+                                Complete KYC
+                            </a>
+                        {% else %}
+                            <a href="{% url 'account:kyc_detail' %}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-id-card me-2"></i>
+                                View KYC Status
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'account:notifications' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-bell me-2"></i>
+                            Notifications
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

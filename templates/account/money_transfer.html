@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Send Money - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Send Money
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h6>Please correct the following errors:</h6>
+                            {{ form.errors }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" id="transfer-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.receiver_account.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Recipient Account
+                                    </label>
+                                    {{ form.receiver_account }}
+                                    {% if form.receiver_account.help_text %}
+                                        <div class="form-text">{{ form.receiver_account.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.receiver_account.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.receiver_account.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                        <i class="fas fa-dollar-sign me-1"></i>Amount
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.amount }}
+                                    </div>
+                                    {% if form.amount.help_text %}
+                                        <div class="form-text">{{ form.amount.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.amount.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.amount.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                                        <i class="fas fa-comment me-1"></i>Description (Optional)
+                                    </label>
+                                    {{ form.description }}
+                                    {% if form.description.help_text %}
+                                        <div class="form-text">{{ form.description.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.reference.id_for_label }}" class="form-label">
+                                        <i class="fas fa-hashtag me-1"></i>Reference (Optional)
+                                    </label>
+                                    {{ form.reference }}
+                                    {% if form.reference.help_text %}
+                                        <div class="form-text">{{ form.reference.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Transaction Fee:</strong> 1% of the transfer amount will be charged as a processing fee.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Send Money
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-2">Need to find someone's account?</p>
+                        <a href="{% url 'account:search_account' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>
+                            Search for Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <i class="fas fa-hand-holding-usd fa-2x text-primary mb-2"></i>
+                            <h6>Request Money</h6>
+                            <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-primary btn-sm">
+                                Create Request
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <i class="fas fa-history fa-2x text-info mb-2"></i>
+                            <h6>Transaction History</h6>
+                            <a href="{% url 'account:transactions' %}" class="btn btn-outline-info btn-sm">
+                                View History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format currency input
+    const amountInput = document.querySelector('#id_amount');
+    if (amountInput) {
+        amountInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^\d.]/g, '');
+            if (value.includes('.')) {
+                const parts = value.split('.');
+                if (parts[1].length > 2) {
+                    parts[1] = parts[1].substring(0, 2);
+                    value = parts.join('.');
+                }
+            }
+            e.target.value = value;
+        });
+    }
+
+    // Form validation
+    const form = document.getElementById('transfer-form');
+    form.addEventListener('submit', function(e) {
+        const amount = parseFloat(amountInput.value);
+        if (amount <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid amount greater than zero.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %} 

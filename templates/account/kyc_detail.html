@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}KYC Details - PayWay{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow">
+            <div class="card-header bg-success text-white text-center py-3">
+                <h4 class="mb-0">
+                    <i class="fas fa-id-card me-2"></i>KYC Information
+                </h4>
+                <p class="mb-0">Your verification details</p>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Personal Information</h6>
+                        <p><strong>Full Name:</strong> {{ kyc.full_name }}</p>
+                        <p><strong>Date of Birth:</strong> {{ kyc.date_of_birth }}</p>
+                        <p><strong>Nationality:</strong> {{ kyc.nationality }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Address Information</h6>
+                        <p><strong>Address:</strong> {{ kyc.address }}</p>
+                        <p><strong>City:</strong> {{ kyc.city }}</p>
+                        <p><strong>State:</strong> {{ kyc.state }}</p>
+                        <p><strong>Country:</strong> {{ kyc.country }}</p>
+                        <p><strong>Postal Code:</strong> {{ kyc.postal_code }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">ID Document</h6>
+                        {% if kyc.id_document %}
+                            <img src="{{ kyc.id_document.url }}" class="img-fluid rounded" alt="ID Document">
+                        {% else %}
+                            <p class="text-muted">No document uploaded</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Proof of Address</h6>
+                        {% if kyc.proof_of_address %}
+                            <img src="{{ kyc.proof_of_address.url }}" class="img-fluid rounded" alt="Proof of Address">
+                        {% else %}
+                            <p class="text-muted">No document uploaded</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Selfie Photo</h6>
+                        {% if kyc.selfie_photo %}
+                            <img src="{{ kyc.selfie_photo.url }}" class="img-fluid rounded" alt="Selfie Photo">
+                        {% else %}
+                            <p class="text-muted">No photo uploaded</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Verification Status</h6>
+                        <p>
+                            <strong>Status:</strong> 
+                            <span class="badge bg-{% if kyc.verification_status == 'approved' %}success{% elif kyc.verification_status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                {{ kyc.verification_status|title }}
+                            </span>
+                        </p>
+                        <p><strong>Document Verified:</strong> 
+                            <i class="fas fa-{% if kyc.document_verified %}check text-success{% else %}times text-danger{% endif %}"></i>
+                        </p>
+                        <p><strong>Face Verified:</strong> 
+                            <i class="fas fa-{% if kyc.face_verified %}check text-success{% else %}times text-danger{% endif %}"></i>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">AI Analysis</h6>
+                        <p><strong>Risk Score:</strong> {{ kyc.risk_score|floatformat:2 }}</p>
+                        <p><strong>AI Flagged:</strong> 
+                            <i class="fas fa-{% if kyc.ai_flagged %}exclamation-triangle text-warning{% else %}check text-success{% endif %}"></i>
+                        </p>
+                        <p><strong>Confidence:</strong> {{ kyc.verification_confidence|floatformat:1 }}%</p>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'account:account_info' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
