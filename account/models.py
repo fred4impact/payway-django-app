@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from decimal import Decimal
 import random
 import string
 
@@ -90,7 +91,7 @@ class Transaction(models.Model):
         if not self.transaction_id:
             self.transaction_id = self.generate_transaction_id()
         if not self.total_amount:
-            self.total_amount = self.amount + self.transaction_fee
+            self.total_amount = self.amount + Decimal(str(self.transaction_fee))
         super().save(*args, **kwargs)
 
     def generate_transaction_id(self):
@@ -149,6 +150,23 @@ class PaymentRequest(models.Model):
         """Generate a unique request ID"""
         import uuid
         return f"REQ{str(uuid.uuid4())[:8].upper()}"
+
+    def check_expiration(self):
+        """Check if the request has expired and update status"""
+        from django.utils import timezone
+        if self.expires_at and timezone.now() > self.expires_at:
+            self.is_expired = True
+            if self.status == 'pending':
+                self.status = 'expired'
+            self.save(update_fields=['is_expired', 'status'])
+        return self.is_expired
+
+    def is_expired_property(self):
+        """Property to check if request is expired"""
+        from django.utils import timezone
+        if self.expires_at and timezone.now() > self.expires_at:
+            return True
+        return False
 
     class Meta:
         verbose_name = 'Payment Request'
