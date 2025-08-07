@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}Transaction Details - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Back Button -->
+            <div class="mb-3">
+                <a href="{% url 'account:transactions' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Transactions
+                </a>
+            </div>
+
+            <!-- Transaction Card -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Transaction Details
+                        </h4>
+                        <span class="badge bg-light text-dark fs-6">{{ transaction.transaction_id }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Status Banner -->
+                    <div class="alert {% if transaction.status == 'completed' %}alert-success{% elif transaction.status == 'pending' %}alert-warning{% elif transaction.status == 'failed' %}alert-danger{% else %}alert-secondary{% endif %} mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas {% if transaction.status == 'completed' %}fa-check-circle{% elif transaction.status == 'pending' %}fa-clock{% elif transaction.status == 'failed' %}fa-exclamation-triangle{% else %}fa-times-circle{% endif %} me-2"></i>
+                            <div>
+                                <strong>
+                                    {% if transaction.status == 'completed' %}
+                                        Transaction Completed
+                                    {% elif transaction.status == 'pending' %}
+                                        Transaction Pending
+                                    {% elif transaction.status == 'failed' %}
+                                        Transaction Failed
+                                    {% else %}
+                                        Transaction Cancelled
+                                    {% endif %}
+                                </strong>
+                                <br><small>{{ transaction.created_at|date:"F d, Y \a\t g:i A" }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Information -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Transaction Information
+                            </h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Amount:</td>
+                                    <td class="fs-5 text-success fw-bold">${{ transaction.amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Currency:</td>
+                                    <td>{{ transaction.currency }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Type:</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ transaction.get_transaction_type_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Status:</td>
+                                    <td>
+                                        <span class="badge {% if transaction.status == 'completed' %}bg-success{% elif transaction.status == 'pending' %}bg-warning{% elif transaction.status == 'failed' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ transaction.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% if transaction.transaction_fee > 0 %}
+                                <tr>
+                                    <td class="fw-bold">Transaction Fee:</td>
+                                    <td class="text-muted">${{ transaction.transaction_fee|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Total Amount:</td>
+                                    <td class="fw-bold">${{ transaction.total_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if transaction.description %}
+                                <tr>
+                                    <td class="fw-bold">Description:</td>
+                                    <td>{{ transaction.description }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if transaction.reference %}
+                                <tr>
+                                    <td class="fw-bold">Reference:</td>
+                                    <td>{{ transaction.reference }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td class="fw-bold">Created:</td>
+                                    <td>{{ transaction.created_at|date:"F d, Y \a\t g:i A" }}</td>
+                                </tr>
+                                {% if transaction.completed_at %}
+                                <tr>
+                                    <td class="fw-bold">Completed:</td>
+                                    <td class="text-success">{{ transaction.completed_at|date:"F d, Y \a\t g:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-users me-2"></i>
+                                User Information
+                            </h5>
+                            
+                            <!-- Sender Info -->
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="fas fa-user-minus me-2"></i>
+                                    Sent From
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-lg me-3">
+                                            <i class="fas fa-user-circle fa-3x text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">{{ transaction.sender.get_full_name|default:"No Name" }}</h6>
+                                            <p class="mb-1 text-muted">{{ transaction.sender.email }}</p>
+                                            <small class="text-muted">Account: {{ transaction.sender_account.account_number }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Receiver Info -->
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Sent To
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-lg me-3">
+                                            <i class="fas fa-user-circle fa-3x text-success"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">{{ transaction.receiver.get_full_name|default:"No Name" }}</h6>
+                                            <p class="mb-1 text-muted">{{ transaction.receiver.email }}</p>
+                                            <small class="text-muted">Account: {{ transaction.receiver_account.account_number }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Information -->
+                    {% if transaction.is_verified or transaction.verification_code %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    Security Information
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% if transaction.is_verified %}
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Verification Status:</strong></p>
+                                            <span class="badge bg-success">Verified</span>
+                                        </div>
+                                        {% endif %}
+                                        {% if transaction.verification_code %}
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Verification Code:</strong></p>
+                                            <code>{{ transaction.verification_code }}</code>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-center gap-3">
+                                {% if transaction.status == 'completed' %}
+                                    <div class="text-center">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <p class="text-success fw-bold">Transaction completed successfully!</p>
+                                    </div>
+                                {% elif transaction.status == 'pending' %}
+                                    <div class="text-center">
+                                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                        <p class="text-warning fw-bold">Transaction is being processed</p>
+                                    </div>
+                                {% elif transaction.status == 'failed' %}
+                                    <div class="text-center">
+                                        <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                                        <p class="text-danger fw-bold">Transaction failed</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <i class="fas fa-paper-plane fa-2x text-primary mb-2"></i>
+                            <h6>Send Money</h6>
+                            <a href="{% url 'account:money_transfer' %}" class="btn btn-outline-primary btn-sm">
+                                Send Money
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <i class="fas fa-hand-holding-usd fa-2x text-info mb-2"></i>
+                            <h6>Request Money</h6>
+                            <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-info btn-sm">
+                                Request Money
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="fas fa-list fa-2x text-success mb-2"></i>
+                            <h6>All Transactions</h6>
+                            <a href="{% url 'account:transactions' %}" class="btn btn-outline-success btn-sm">
+                                View All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any JavaScript functionality here if needed
+    console.log('Transaction detail page loaded');
+});
+</script>
+{% endblock %}

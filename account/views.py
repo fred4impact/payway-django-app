@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import datetime, timedelta
+from decimal import Decimal
 import csv
 from .forms import KYCForm, AccountSearchForm, MoneyTransferForm, PaymentRequestForm, TransactionFilterForm
 from .models import KYC, Account, Transaction, PaymentRequest, Notification
@@ -145,7 +146,7 @@ def money_transfer_view(request):
                 return redirect('account:money_transfer')
             
             # Calculate transaction fee (simple 1% fee)
-            transaction_fee = amount * 0.01
+            transaction_fee = amount * Decimal('0.01')
             total_amount = amount + transaction_fee
             
             # Check if sender has enough balance including fee
@@ -279,6 +280,10 @@ def payment_requests_view(request):
     sent_requests = PaymentRequest.objects.filter(requester=request.user).order_by('-created_at')
     received_requests = PaymentRequest.objects.filter(recipient=request.user).order_by('-created_at')
     
+    # Check expiration for all requests
+    for payment_request in list(sent_requests) + list(received_requests):
+        payment_request.check_expiration()
+    
     context = {
         'sent_requests': sent_requests,
         'received_requests': received_requests,
@@ -290,6 +295,9 @@ def payment_requests_view(request):
 def settle_payment_request_view(request, request_id):
     """Settle a payment request"""
     payment_request = get_object_or_404(PaymentRequest, request_id=request_id, recipient=request.user)
+    
+    # Check expiration
+    payment_request.check_expiration()
     
     if payment_request.status != 'pending':
         messages.error(request, 'This payment request cannot be settled.')
@@ -438,6 +446,9 @@ def payment_request_detail_view(request, request_id):
         ),
         request_id=request_id
     )
+    
+    # Check expiration
+    payment_request.check_expiration()
     
     context = {
         'payment_request': payment_request,

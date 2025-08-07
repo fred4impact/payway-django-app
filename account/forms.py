@@ -1,5 +1,5 @@
 from django import forms
-from .models import KYC, Transaction, PaymentRequest
+from .models import KYC, Transaction, PaymentRequest, Account
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column
 from django.contrib.auth import get_user_model

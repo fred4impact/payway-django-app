@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Requests - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-hand-holding-usd me-2"></i>
+                    Payment Requests
+                </h2>
+                <a href="{% url 'account:create_payment_request' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    New Request
+                </a>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs" id="requestTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">
+                        <i class="fas fa-download me-2"></i>
+                        Received Requests
+                        {% if received_requests %}
+                            <span class="badge bg-primary ms-2">{{ received_requests.count }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent" type="button" role="tab">
+                        <i class="fas fa-upload me-2"></i>
+                        Sent Requests
+                        {% if sent_requests %}
+                            <span class="badge bg-secondary ms-2">{{ sent_requests.count }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="requestTabsContent">
+                <!-- Received Requests -->
+                <div class="tab-pane fade show active" id="received" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            {% if received_requests %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Request ID</th>
+                                                <th>From</th>
+                                                <th>Amount</th>
+                                                <th>Description</th>
+                                                <th>Status</th>
+                                                <th>Expires</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for request in received_requests %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ request.request_id }}</strong>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-sm me-2">
+                                                            <i class="fas fa-user-circle fa-2x text-primary"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold">{{ request.requester.get_full_name|default:request.requester.email }}</div>
+                                                            <small class="text-muted">{{ request.requester.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold text-success">${{ request.amount|floatformat:2 }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if request.description %}
+                                                        {{ request.description|truncatechars:30 }}
+                                                    {% else %}
+                                                        <span class="text-muted">No description</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if request.status == 'pending' %}
+                                                        {% if request.is_expired %}
+                                                            <span class="badge bg-danger">Expired</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning">Pending</span>
+                                                        {% endif %}
+                                                    {% elif request.status == 'paid' %}
+                                                        <span class="badge bg-success">Paid</span>
+                                                    {% elif request.status == 'cancelled' %}
+                                                        <span class="badge bg-secondary">Cancelled</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if request.expires_at %}
+                                                        <small class="text-muted">
+                                                            {{ request.expires_at|date:"M d, Y" }}
+                                                        </small>
+                                                    {% else %}
+                                                        <span class="text-muted">No expiry</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{% url 'account:payment_request_detail' request.request_id %}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        {% if request.status == 'pending' and not request.is_expired %}
+                                                            <a href="{% url 'account:settle_payment_request' request.request_id %}" class="btn btn-sm btn-success">
+                                                                <i class="fas fa-dollar-sign me-1"></i>Pay
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Received Requests</h5>
+                                    <p class="text-muted">You haven't received any payment requests yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sent Requests -->
+                <div class="tab-pane fade" id="sent" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            {% if sent_requests %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Request ID</th>
+                                                <th>To</th>
+                                                <th>Amount</th>
+                                                <th>Description</th>
+                                                <th>Status</th>
+                                                <th>Expires</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for request in sent_requests %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ request.request_id }}</strong>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-sm me-2">
+                                                            <i class="fas fa-user-circle fa-2x text-info"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold">{{ request.recipient.get_full_name|default:request.recipient.email }}</div>
+                                                            <small class="text-muted">{{ request.recipient.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold text-success">${{ request.amount|floatformat:2 }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if request.description %}
+                                                        {{ request.description|truncatechars:30 }}
+                                                    {% else %}
+                                                        <span class="text-muted">No description</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if request.status == 'pending' %}
+                                                        {% if request.is_expired %}
+                                                            <span class="badge bg-danger">Expired</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning">Pending</span>
+                                                        {% endif %}
+                                                    {% elif request.status == 'paid' %}
+                                                        <span class="badge bg-success">Paid</span>
+                                                    {% elif request.status == 'cancelled' %}
+                                                        <span class="badge bg-secondary">Cancelled</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if request.expires_at %}
+                                                        <small class="text-muted">
+                                                            {{ request.expires_at|date:"M d, Y" }}
+                                                        </small>
+                                                    {% else %}
+                                                        <span class="text-muted">No expiry</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'account:payment_request_detail' request.request_id %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye me-1"></i>View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-paper-plane fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Sent Requests</h5>
+                                    <p class="text-muted">You haven't sent any payment requests yet.</p>
+                                    <a href="{% url 'account:create_payment_request' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>
+                                        Create Your First Request
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh pending requests every 30 seconds
+    setInterval(function() {
+        // You can add AJAX refresh logic here if needed
+    }, 30000);
+});
+</script>
+{% endblock %}
