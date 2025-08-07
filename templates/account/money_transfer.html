@@ -4,39 +4,118 @@
 {% block title %}Send Money - PayWay{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-paper-plane me-2"></i>
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1 text-dark fw-bold">
+                        <i class="fas fa-paper-plane me-2 text-primary"></i>
                         Send Money
-                    </h4>
+                    </h1>
+                    <p class="text-muted mb-0">Transfer money to friends, family, or businesses securely</p>
                 </div>
-                <div class="card-body">
+                <div>
+                    <a href="{% url 'account:transactions' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-history me-2"></i>
+                        View History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <!-- Progress Steps -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">1. Recipient</h6>
+                                    <small class="text-muted">Select recipient account</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-dollar-sign text-muted"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-muted">2. Amount</h6>
+                                    <small class="text-muted">Enter transfer amount</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-check text-muted"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-muted">3. Confirm</h6>
+                                    <small class="text-muted">Review and send</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-edit me-2 text-primary"></i>
+                        Transfer Details
+                    </h5>
+                </div>
+                <div class="card-body p-4">
                     {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <h6>Please correct the following errors:</h6>
-                            {{ form.errors }}
+                        <div class="alert alert-danger border-0 shadow-sm">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">Please correct the following errors:</h6>
+                                    {{ form.errors }}
+                                </div>
+                            </div>
                         </div>
                     {% endif %}
 
                     <form method="post" id="transfer-form">
                         {% csrf_token %}
                         
-                        <div class="row">
+                        <!-- Recipient Section -->
+                        <div class="row mb-4">
                             <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.receiver_account.id_for_label }}" class="form-label">
-                                        <i class="fas fa-user me-1"></i>Recipient Account
+                                <div class="form-group">
+                                    <label for="{{ form.receiver_account.id_for_label }}" class="form-label fw-bold text-dark">
+                                        <i class="fas fa-user me-2 text-primary"></i>
+                                        Recipient Account
                                     </label>
-                                    {{ form.receiver_account }}
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        {{ form.receiver_account }}
+                                    </div>
                                     {% if form.receiver_account.help_text %}
-                                        <div class="form-text">{{ form.receiver_account.help_text }}</div>
+                                        <div class="form-text text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            {{ form.receiver_account.help_text }}
+                                        </div>
                                     {% endif %}
                                     {% if form.receiver_account.errors %}
                                         <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
                                             {{ form.receiver_account.errors.0 }}
                                         </div>
                                     {% endif %}
@@ -44,21 +123,29 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        <!-- Amount Section -->
+                        <div class="row mb-4">
                             <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.amount.id_for_label }}" class="form-label">
-                                        <i class="fas fa-dollar-sign me-1"></i>Amount
+                                <div class="form-group">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label fw-bold text-dark">
+                                        <i class="fas fa-dollar-sign me-2 text-success"></i>
+                                        Transfer Amount
                                     </label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-dollar-sign text-success"></i>
+                                        </span>
                                         {{ form.amount }}
                                     </div>
                                     {% if form.amount.help_text %}
-                                        <div class="form-text">{{ form.amount.help_text }}</div>
+                                        <div class="form-text text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            {{ form.amount.help_text }}
+                                        </div>
                                     {% endif %}
                                     {% if form.amount.errors %}
                                         <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
                                             {{ form.amount.errors.0 }}
                                         </div>
                                     {% endif %}
@@ -66,78 +153,117 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        <!-- Description Section -->
+                        <div class="row mb-4">
                             <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.description.id_for_label }}" class="form-label">
-                                        <i class="fas fa-comment me-1"></i>Description (Optional)
+                                <div class="form-group">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label fw-bold text-dark">
+                                        <i class="fas fa-comment me-2 text-info"></i>
+                                        Description (Optional)
                                     </label>
-                                    {{ form.description }}
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-comment text-info"></i>
+                                        </span>
+                                        {{ form.description }}
+                                    </div>
                                     {% if form.description.help_text %}
-                                        <div class="form-text">{{ form.description.help_text }}</div>
+                                        <div class="form-text text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            {{ form.description.help_text }}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row">
+                        <!-- Reference Section -->
+                        <div class="row mb-4">
                             <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.reference.id_for_label }}" class="form-label">
-                                        <i class="fas fa-hashtag me-1"></i>Reference (Optional)
+                                <div class="form-group">
+                                    <label for="{{ form.reference.id_for_label }}" class="form-label fw-bold text-dark">
+                                        <i class="fas fa-hashtag me-2 text-warning"></i>
+                                        Reference (Optional)
                                     </label>
-                                    {{ form.reference }}
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-hashtag text-warning"></i>
+                                        </span>
+                                        {{ form.reference }}
+                                    </div>
                                     {% if form.reference.help_text %}
-                                        <div class="form-text">{{ form.reference.help_text }}</div>
+                                        <div class="form-text text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            {{ form.reference.help_text }}
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Transaction Fee:</strong> 1% of the transfer amount will be charged as a processing fee.
+                        <!-- Fee Information -->
+                        <div class="alert alert-info border-0 shadow-sm">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-info-circle text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Transaction Fee</h6>
+                                    <p class="mb-0 text-muted">1% of the transfer amount will be charged as a processing fee. This fee helps us maintain secure and fast transfers.</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-3 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
                                 <i class="fas fa-paper-plane me-2"></i>
                                 Send Money
                             </button>
                         </div>
                     </form>
-
-                    <hr class="my-4">
-
-                    <div class="text-center">
-                        <p class="mb-2">Need to find someone's account?</p>
-                        <a href="{% url 'account:search_account' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-search me-2"></i>
-                            Search for Account
-                        </a>
-                    </div>
                 </div>
             </div>
 
             <!-- Quick Actions -->
             <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card border-primary">
-                        <div class="card-body text-center">
-                            <i class="fas fa-hand-holding-usd fa-2x text-primary mb-2"></i>
-                            <h6>Request Money</h6>
-                            <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-primary btn-sm">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100 quick-action-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-hand-holding-usd fa-lg text-info"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-2">Request Money</h6>
+                            <p class="text-muted small mb-3">Ask someone to send you money</p>
+                            <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-info btn-sm">
                                 Create Request
                             </a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card border-info">
-                        <div class="card-body text-center">
-                            <i class="fas fa-history fa-2x text-info mb-2"></i>
-                            <h6>Transaction History</h6>
-                            <a href="{% url 'account:transactions' %}" class="btn btn-outline-info btn-sm">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100 quick-action-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-search fa-lg text-success"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-2">Find Account</h6>
+                            <p class="text-muted small mb-3">Search for users by name or email</p>
+                            <a href="{% url 'account:search_account' %}" class="btn btn-outline-success btn-sm">
+                                Search Users
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100 quick-action-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-history fa-lg text-warning"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-2">Transaction History</h6>
+                            <p class="text-muted small mb-3">View all your past transactions</p>
+                            <a href="{% url 'account:transactions' %}" class="btn btn-outline-warning btn-sm">
                                 View History
                             </a>
                         </div>
@@ -147,6 +273,38 @@
         </div>
     </div>
 </div>
+
+<style>
+.quick-action-card {
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--bs-primary);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.form-control, .form-select {
+    border-left: none;
+    border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.input-group-text {
+    border-right: none;
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -175,6 +333,18 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Please enter a valid amount greater than zero.');
             return false;
         }
+    });
+
+    // Add focus effects to form inputs
+    const inputs = document.querySelectorAll('.form-control, .form-select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.closest('.form-group').classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.closest('.form-group').classList.remove('focused');
+        });
     });
 });
 </script>

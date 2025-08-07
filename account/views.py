@@ -8,8 +8,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
 import csv
-from .forms import KYCForm, AccountSearchForm, MoneyTransferForm, PaymentRequestForm, TransactionFilterForm, CreditCardForm, CardFundingForm, CardWithdrawalForm
-from .models import KYC, Account, Transaction, PaymentRequest, Notification, CreditCard
+from .forms import KYCForm, AccountSearchForm, MoneyTransferForm, PaymentRequestForm, TransactionFilterForm, CreditCardForm, CardFundingForm, CardWithdrawalForm, InternationalTransferForm, SwiftCodeSearchForm, CurrencyConverterForm
+from .models import KYC, Account, Transaction, PaymentRequest, Notification, CreditCard, Currency, Bank, InternationalTransfer
 from userauths.models import User
 
 
@@ -764,6 +764,206 @@ def card_withdrawal_view(request):
         'form': form,
     }
     return render(request, 'account/card_withdrawal.html', context)
+
+
+# International Transfer Views
+@login_required
+def international_transfers_view(request):
+    """View for listing international transfers"""
+    transfers = InternationalTransfer.objects.filter(sender=request.user).order_by('-created_at')
+    
+    # Filter by status if provided
+    status_filter = request.GET.get('status')
+    if status_filter:
+        transfers = transfers.filter(status=status_filter)
+    
+    context = {
+        'transfers': transfers,
+        'status_choices': InternationalTransfer.TRANSFER_STATUS,
+        'current_status': status_filter,
+    }
+    return render(request, 'account/international_transfers.html', context)
+
+
+@login_required
+def create_international_transfer_view(request):
+    """View for creating international transfers"""
+    if request.method == 'POST':
+        form = InternationalTransferForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Get the validated bank from the form
+                    bank = form.bank
+                    
+                    # Calculate transfer fee
+                    fee = form.calculate_transfer_fee(
+                        form.cleaned_data['amount'], 
+                        form.cleaned_data['currency'].code
+                    )
+                    
+                    # Create the international transfer
+                    international_transfer = form.save(commit=False)
+                    international_transfer.sender = request.user
+                    international_transfer.sender_account = request.user.account
+                    international_transfer.recipient_bank = bank
+                    international_transfer.recipient_swift_code = bank.swift_code
+                    international_transfer.transfer_fee = fee
+                    international_transfer.exchange_rate = form.cleaned_data['currency'].exchange_rate_to_usd
+                    international_transfer.estimated_delivery = timezone.now() + timedelta(days=3)
+                    international_transfer.save()
+                    
+                    # Deduct amount from sender's account
+                    sender_account = request.user.account
+                    sender_account.account_balance -= (international_transfer.amount + fee)
+                    sender_account.save()
+                    
+                    # Create notification
+                    Notification.objects.create(
+                        user=request.user,
+                        notification_type='transaction',
+                        title='International Transfer Initiated',
+                        message=f'Your international transfer of {international_transfer.currency.symbol}{international_transfer.amount} to {international_transfer.recipient_name} has been initiated. Transfer ID: {international_transfer.transfer_id}',
+                        transaction=None
+                    )
+                    
+                    messages.success(request, f'International transfer initiated successfully! Transfer ID: {international_transfer.transfer_id}')
+                    return redirect('account:international_transfer_detail', transfer_id=international_transfer.transfer_id)
+                    
+            except Exception as e:
+                messages.error(request, f'Error creating transfer: {str(e)}')
+    else:
+        form = InternationalTransferForm()
+    
+    context = {
+        'form': form,
+        'currencies': Currency.objects.filter(is_active=True),
+    }
+    return render(request, 'account/create_international_transfer.html', context)
+
+
+@login_required
+def international_transfer_detail_view(request, transfer_id):
+    """View for international transfer details"""
+    try:
+        transfer = InternationalTransfer.objects.get(
+            transfer_id=transfer_id, 
+            sender=request.user
+        )
+    except InternationalTransfer.DoesNotExist:
+        messages.error(request, 'Transfer not found.')
+        return redirect('account:international_transfers')
+    
+    context = {
+        'transfer': transfer,
+    }
+    return render(request, 'account/international_transfer_detail.html', context)
+
+
+@login_required
+def swift_code_search_view(request):
+    """View for searching SWIFT codes"""
+    form = SwiftCodeSearchForm(request.GET)
+    banks = Bank.objects.filter(is_active=True)
+    
+    if form.is_valid():
+        search = form.cleaned_data.get('search', '').strip()
+        country = form.cleaned_data.get('country', '').strip()
+        
+        if search:
+            banks = banks.filter(
+                models.Q(bank_name__icontains=search) |
+                models.Q(swift_code__icontains=search) |
+                models.Q(country__icontains=search) |
+                models.Q(city__icontains=search)
+            )
+        
+        if country:
+            banks = banks.filter(country=country)
+    
+    # Paginate results
+    paginator = Paginator(banks, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'form': form,
+        'page_obj': page_obj,
+        'total_banks': banks.count(),
+    }
+    return render(request, 'account/swift_code_search.html', context)
+
+
+@login_required
+def currency_converter_view(request):
+    """View for currency conversion"""
+    form = CurrencyConverterForm(request.GET)
+    conversion_result = None
+    
+    if form.is_valid():
+        try:
+            conversion_result = form.convert_currency()
+        except Exception as e:
+            messages.error(request, f'Error converting currency: {str(e)}')
+    
+    context = {
+        'form': form,
+        'conversion_result': conversion_result,
+        'currencies': Currency.objects.filter(is_active=True),
+    }
+    return render(request, 'account/currency_converter.html', context)
+
+
+@login_required
+def transfer_fee_calculator_view(request):
+    """View for calculating transfer fees"""
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        currency_code = request.POST.get('currency')
+        
+        if amount and currency_code:
+            try:
+                amount = Decimal(amount)
+                currency = Currency.objects.get(code=currency_code)
+                
+                # Calculate fee using the same logic as the form
+                fee_structure = {
+                    'USD': {'percentage': 0.02, 'min_fee': 5.00, 'max_fee': 50.00},
+                    'EUR': {'percentage': 0.025, 'min_fee': 5.00, 'max_fee': 60.00},
+                    'GBP': {'percentage': 0.03, 'min_fee': 5.00, 'max_fee': 75.00},
+                    'JPY': {'percentage': 0.025, 'min_fee': 500.00, 'max_fee': 5000.00},
+                    'CAD': {'percentage': 0.025, 'min_fee': 6.00, 'max_fee': 60.00},
+                    'AUD': {'percentage': 0.025, 'min_fee': 6.00, 'max_fee': 65.00},
+                    'CHF': {'percentage': 0.025, 'min_fee': 5.00, 'max_fee': 55.00},
+                    'SGD': {'percentage': 0.025, 'min_fee': 6.00, 'max_fee': 65.00},
+                    'HKD': {'percentage': 0.025, 'min_fee': 40.00, 'max_fee': 400.00},
+                    'NZD': {'percentage': 0.025, 'min_fee': 7.00, 'max_fee': 70.00},
+                }
+                
+                structure = fee_structure.get(currency_code, fee_structure['USD'])
+                percentage_fee = amount * Decimal(str(structure['percentage']))
+                fee = max(structure['min_fee'], min(percentage_fee, structure['max_fee']))
+                total_amount = amount + fee
+                
+                return JsonResponse({
+                    'success': True,
+                    'amount': float(amount),
+                    'fee': float(fee),
+                    'total_amount': float(total_amount),
+                    'currency': currency_code,
+                    'currency_symbol': currency.symbol,
+                })
+                
+            except (ValueError, Currency.DoesNotExist):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid amount or currency'
+                })
+    
+    context = {
+        'currencies': Currency.objects.filter(is_active=True),
+    }
+    return render(request, 'account/transfer_fee_calculator.html', context)
 
 
 # Utility Views

@@ -3,150 +3,318 @@
 {% block title %}Notifications - PayWay{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">
-                        <i class="fas fa-bell me-2"></i>
-                        Notifications
-                    </h4>
-                    <div>
-                        <a href="#" class="btn btn-light btn-sm me-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1 text-dark fw-bold">
+                        <i class="fas fa-bell me-2 text-primary"></i>
+                        Notifications {{ notifications.count }}
+                    </h1>
+                    <p class="text-muted mb-0">Manage your account notifications and alerts</p>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-1"></i>
+                            Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-csv me-2"></i>CSV</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-cog me-1"></i>
-                            Settings
-                        </a>
-                        <a href="{% url 'core:dashboard' %}" class="btn btn-light btn-sm">
-                            <i class="fas fa-arrow-left me-1"></i>
-                            Back to Dashboard
-                        </a>
+                            More options
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-check-double me-2"></i>Mark all as read</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-archive me-2"></i>Archive all</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Notification settings</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <ul class="nav nav-tabs nav-tabs-soft" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#all">
+                                <i class="fas fa-list me-2"></i>All Notifications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#unread">
+                                <i class="fas fa-envelope me-2"></i>Unread
+                                {% if unread_count > 0 %}
+                                    <span class="badge bg-primary ms-1">{{ unread_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#transactions">
+                                <i class="fas fa-exchange-alt me-2"></i>Transactions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#requests">
+                                <i class="fas fa-hand-holding-usd me-2"></i>Payment Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#security">
+                                <i class="fas fa-shield-alt me-2"></i>Security
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="checkbox" id="selectAll">
+                            <label class="form-check-label fw-bold text-dark" for="selectAll">
+                                Select All
+                            </label>
+                        </div>
+                        <span class="text-muted me-3">0 Selected</span>
+                        <div class="btn-group me-3">
+                            <button class="btn btn-outline-primary btn-sm" disabled>
+                                <i class="fas fa-check me-1"></i>Mark as Read
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="fas fa-archive me-1"></i>Archive
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" disabled>
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
                     {% if notifications %}
-                        <div class="list-group list-group-flush">
-                            {% for notification in notifications %}
-                                <div class="list-group-item {% if notification.status == 'unread' %}border-start border-primary border-3{% endif %}">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex align-items-center mb-2">
-                                                {% if notification.notification_type == 'transaction' %}
-                                                    <i class="fas fa-exchange-alt text-primary me-2"></i>
-                                                {% elif notification.notification_type == 'payment_request' %}
-                                                    <i class="fas fa-hand-holding-usd text-info me-2"></i>
-                                                {% elif notification.notification_type == 'kyc' %}
-                                                    <i class="fas fa-id-card text-warning me-2"></i>
-                                                {% elif notification.notification_type == 'security' %}
-                                                    <i class="fas fa-shield-alt text-danger me-2"></i>
-                                                {% else %}
-                                                    <i class="fas fa-info-circle text-secondary me-2"></i>
-                                                {% endif %}
-                                                
-                                                <h6 class="mb-0 {% if notification.status == 'unread' %}fw-bold{% endif %}">
-                                                    {{ notification.title }}
-                                                </h6>
-                                                
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0" style="width: 50px;">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="selectAllTable">
+                                            </div>
+                                        </th>
+                                        <th class="border-0">Notification</th>
+                                        <th class="border-0">Type</th>
+                                        <th class="border-0">Status</th>
+                                        <th class="border-0">Date</th>
+                                        <th class="border-0">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for notification in notifications %}
+                                        <tr class="{% if notification.status == 'unread' %}table-active{% endif %}">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input notification-checkbox" type="checkbox" value="{{ notification.id }}">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0 me-3">
+                                                        {% if notification.notification_type == 'transaction' %}
+                                                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-exchange-alt text-primary"></i>
+                                                            </div>
+                                                        {% elif notification.notification_type == 'payment_request' %}
+                                                            <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-hand-holding-usd text-info"></i>
+                                                            </div>
+                                                        {% elif notification.notification_type == 'kyc' %}
+                                                            <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-id-card text-warning"></i>
+                                                            </div>
+                                                        {% elif notification.notification_type == 'security' %}
+                                                            <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-shield-alt text-danger"></i>
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-info-circle text-secondary"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-1 fw-bold text-dark {% if notification.status == 'unread' %}fw-bold{% endif %}">
+                                                            {{ notification.title }}
+                                                            {% if notification.status == 'unread' %}
+                                                                <span class="badge bg-primary ms-2">New</span>
+                                                            {% endif %}
+                                                        </h6>
+                                                        <p class="text-muted mb-0 small">{{ notification.message|truncatechars:80 }}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if notification.notification_type == 'transaction' %}primary{% elif notification.notification_type == 'payment_request' %}info{% elif notification.notification_type == 'kyc' %}warning{% elif notification.notification_type == 'security' %}danger{% else %}secondary{% endif %}-subtle text-{% if notification.notification_type == 'transaction' %}primary{% elif notification.notification_type == 'payment_request' %}info{% elif notification.notification_type == 'kyc' %}warning{% elif notification.notification_type == 'security' %}danger{% else %}secondary{% endif %}">
+                                                    {{ notification.notification_type|title }}
+                                                </span>
+                                            </td>
+                                            <td>
                                                 {% if notification.status == 'unread' %}
-                                                    <span class="badge bg-primary ms-2">New</span>
+                                                    <span class="badge bg-warning-subtle text-warning">
+                                                        <i class="fas fa-envelope me-1"></i>Unread
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-success-subtle text-success">
+                                                        <i class="fas fa-check me-1"></i>Read
+                                                    </span>
                                                 {% endif %}
-                                            </div>
-                                            
-                                            <p class="text-muted mb-2">{{ notification.message }}</p>
-                                            
-                                            <div class="d-flex align-items-center">
-                                                <small class="text-muted me-3">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    {{ notification.created_at|timesince }} ago
-                                                </small>
-                                                
-                                                {% if notification.transaction %}
-                                                    <a href="{% url 'account:transaction_detail' notification.transaction.transaction_id %}" 
-                                                       class="btn btn-outline-primary btn-sm me-2">
-                                                        <i class="fas fa-eye me-1"></i>
-                                                        View Transaction
-                                                    </a>
-                                                {% endif %}
-                                                
-                                                {% if notification.payment_request %}
-                                                    <a href="{% url 'account:payment_request_detail' notification.payment_request.request_id %}" 
-                                                       class="btn btn-outline-info btn-sm me-2">
-                                                        <i class="fas fa-eye me-1"></i>
-                                                        View Request
-                                                    </a>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="ms-3">
-                                            {% if notification.status == 'unread' %}
-                                                <button class="btn btn-outline-secondary btn-sm mark-read-btn" 
-                                                        data-notification-id="{{ notification.id }}">
-                                                    <i class="fas fa-check me-1"></i>
-                                                    Mark Read
-                                                </button>
-                                            {% else %}
+                                            </td>
+                                            <td>
                                                 <small class="text-muted">
-                                                    <i class="fas fa-check me-1"></i>
-                                                    Read
+                                                    {{ notification.created_at|date:"M d, Y" }}
+                                                    <br>
+                                                    <span class="text-muted">{{ notification.created_at|date:"H:i" }}</span>
                                                 </small>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        {% if notification.status == 'unread' %}
+                                                            <li>
+                                                                <a class="dropdown-item mark-read-btn" href="#" data-notification-id="{{ notification.id }}">
+                                                                    <i class="fas fa-check me-2"></i>Mark as Read
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        {% if notification.transaction %}
+                                                            <li>
+                                                                <a class="dropdown-item" href="{% url 'account:transaction_detail' notification.transaction.transaction_id %}">
+                                                                    <i class="fas fa-eye me-2"></i>View Transaction
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        {% if notification.payment_request %}
+                                                            <li>
+                                                                <a class="dropdown-item" href="{% url 'account:payment_request_detail' notification.payment_request.request_id %}">
+                                                                    <i class="fas fa-eye me-2"></i>View Request
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="#">
+                                                                <i class="fas fa-archive me-2"></i>Archive
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item text-danger" href="#">
+                                                                <i class="fas fa-trash me-2"></i>Delete
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
 
                         <!-- Pagination -->
                         {% if page_obj.has_other_pages %}
-                            <nav aria-label="Notification pagination" class="mt-4">
-                                <ul class="pagination justify-content-center">
-                                    {% if page_obj.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page=1">
-                                                <i class="fas fa-angle-double-left"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-                                                <i class="fas fa-angle-left"></i>
-                                            </a>
-                                        </li>
-                                    {% endif %}
+                            <div class="card-footer bg-transparent border-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">
+                                            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} notifications
+                                        </small>
+                                    </div>
+                                    <nav aria-label="Notification pagination">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            {% if page_obj.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=1">
+                                                        <i class="fas fa-angle-double-left"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                                        <i class="fas fa-angle-left"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
 
-                                    {% for num in page_obj.paginator.page_range %}
-                                        {% if page_obj.number == num %}
-                                            <li class="page-item active">
-                                                <span class="page-link">{{ num }}</span>
-                                            </li>
-                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
+                                            {% for num in page_obj.paginator.page_range %}
+                                                {% if page_obj.number == num %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ num }}</span>
+                                                    </li>
+                                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
 
-                                    {% if page_obj.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
-                                                <i class="fas fa-angle-right"></i>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
-                                                <i class="fas fa-angle-double-right"></i>
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
+                                            {% if page_obj.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                                        <i class="fas fa-angle-right"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                                        <i class="fas fa-angle-double-right"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
                         {% endif %}
 
                     {% else %}
                         <div class="text-center py-5">
-                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No notifications</h5>
-                            <p class="text-muted">You're all caught up! New notifications will appear here.</p>
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-bell-slash fa-2x text-muted"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2">No notifications</h5>
+                            <p class="text-muted mb-0">You're all caught up! New notifications will appear here.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -155,14 +323,104 @@
     </div>
 </div>
 
+<style>
+.nav-tabs-soft .nav-link {
+    border: none;
+    color: #6c757d;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-right: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs-soft .nav-link:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: var(--bs-primary);
+}
+
+.nav-tabs-soft .nav-link.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.pagination .page-link {
+    border-radius: 0.375rem;
+    margin: 0 0.125rem;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Select all functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const selectAllTableCheckbox = document.getElementById('selectAllTable');
+    const notificationCheckboxes = document.querySelectorAll('.notification-checkbox');
+
+    function updateSelectAll() {
+        const checkedBoxes = document.querySelectorAll('.notification-checkbox:checked');
+        const totalBoxes = notificationCheckboxes.length;
+        
+        selectAllCheckbox.checked = checkedBoxes.length === totalBoxes;
+        selectAllTableCheckbox.checked = checkedBoxes.length === totalBoxes;
+        
+        // Update selected count
+        const selectedCount = document.querySelector('.text-muted');
+        if (selectedCount) {
+            selectedCount.textContent = `${checkedBoxes.length} Selected`;
+        }
+        
+        // Enable/disable bulk action buttons
+        const bulkButtons = document.querySelectorAll('.btn-group .btn');
+        bulkButtons.forEach(btn => {
+            btn.disabled = checkedBoxes.length === 0;
+        });
+    }
+
+    selectAllCheckbox.addEventListener('change', function() {
+        notificationCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectAll();
+    });
+
+    selectAllTableCheckbox.addEventListener('change', function() {
+        notificationCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectAll();
+    });
+
+    notificationCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectAll);
+    });
+
     // Mark notification as read
     const markReadButtons = document.querySelectorAll('.mark-read-btn');
     markReadButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const notificationId = this.getAttribute('data-notification-id');
-            const listItem = this.closest('.list-group-item');
+            const tableRow = this.closest('tr');
             
             // Send AJAX request to mark as read
             fetch(`/account/notification/${notificationId}/read/`, {
@@ -176,24 +434,45 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.status === 'success') {
                     // Update UI
-                    listItem.classList.remove('border-start', 'border-primary', 'border-3');
-                    const title = listItem.querySelector('h6');
+                    tableRow.classList.remove('table-active');
+                    const title = tableRow.querySelector('h6');
                     title.classList.remove('fw-bold');
                     
-                    // Replace button with "Read" text
-                    const buttonContainer = this.parentElement;
-                    buttonContainer.innerHTML = '<small class="text-muted"><i class="fas fa-check me-1"></i>Read</small>';
+                    // Update status badge
+                    const statusCell = tableRow.querySelector('td:nth-child(4)');
+                    statusCell.innerHTML = '<span class="badge bg-success-subtle text-success"><i class="fas fa-check me-1"></i>Read</span>';
                     
                     // Remove "New" badge
-                    const badge = listItem.querySelector('.badge');
+                    const badge = tableRow.querySelector('.badge.bg-primary');
                     if (badge) {
                         badge.remove();
                     }
+                    
+                    // Remove mark as read option from dropdown
+                    this.remove();
                 }
             })
             .catch(error => {
                 console.error('Error marking notification as read:', error);
             });
+        });
+    });
+
+    // Tab functionality
+    const tabLinks = document.querySelectorAll('.nav-tabs-soft .nav-link');
+    tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs
+            tabLinks.forEach(tab => tab.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Here you would typically filter the notifications based on the tab
+            // For now, we'll just show a console message
+            console.log('Switched to tab:', this.getAttribute('href').substring(1));
         });
     });
 });

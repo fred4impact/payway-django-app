@@ -483,3 +483,118 @@ class CreditCard(models.Model):
         verbose_name = 'Credit Card'
         verbose_name_plural = 'Credit Cards'
         ordering = ['-created_at']
+
+
+class Currency(models.Model):
+    """Currency model for international transfers"""
+    code = models.CharField(max_length=3, unique=True, primary_key=True)
+    name = models.CharField(max_length=50)
+    symbol = models.CharField(max_length=5)
+    is_active = models.BooleanField(default=True)
+    exchange_rate_to_usd = models.DecimalField(max_digits=10, decimal_places=6, default=1.000000)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+    
+    class Meta:
+        verbose_name = 'Currency'
+        verbose_name_plural = 'Currencies'
+        ordering = ['code']
+
+
+class Bank(models.Model):
+    """Bank model for international transfers"""
+    swift_code = models.CharField(max_length=11, unique=True, primary_key=True)
+    bank_name = models.CharField(max_length=255)
+    country = models.CharField(max_length=100)
+    city = models.CharField(max_length=100)
+    address = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.swift_code} - {self.bank_name}"
+    
+    class Meta:
+        verbose_name = 'Bank'
+        verbose_name_plural = 'Banks'
+        ordering = ['bank_name']
+
+
+class InternationalTransfer(models.Model):
+    """International transfer model"""
+    TRANSFER_STATUS = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    TRANSFER_TYPES = [
+        ('swift', 'SWIFT Transfer'),
+        ('sepa', 'SEPA Transfer'),
+        ('wire', 'Wire Transfer'),
+    ]
+    
+    # Transfer details
+    transfer_id = models.CharField(max_length=20, unique=True, blank=True)
+    transfer_type = models.CharField(max_length=20, choices=TRANSFER_TYPES, default='swift')
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    
+    # Exchange rate information
+    exchange_rate = models.DecimalField(max_digits=10, decimal_places=6)
+    amount_in_usd = models.DecimalField(max_digits=15, decimal_places=2)
+    
+    # Sender information
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_international_transfers')
+    sender_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='sent_international_transfers')
+    
+    # Recipient information
+    recipient_name = models.CharField(max_length=255)
+    recipient_bank = models.ForeignKey(Bank, on_delete=models.CASCADE)
+    recipient_account_number = models.CharField(max_length=50)
+    recipient_swift_code = models.CharField(max_length=11)
+    recipient_country = models.CharField(max_length=100)
+    recipient_city = models.CharField(max_length=100)
+    
+    # Transfer status and metadata
+    status = models.CharField(max_length=20, choices=TRANSFER_STATUS, default='pending')
+    description = models.TextField(blank=True)
+    reference = models.CharField(max_length=100, blank=True)
+    
+    # Fees and charges
+    transfer_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
+    estimated_delivery = models.DateTimeField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.transfer_id} - {self.sender.email} to {self.recipient_name}"
+    
+    def save(self, *args, **kwargs):
+        if not self.transfer_id:
+            self.transfer_id = self.generate_transfer_id()
+        if not self.total_amount:
+            self.total_amount = self.amount + self.transfer_fee
+        if not self.amount_in_usd:
+            self.amount_in_usd = self.amount * self.exchange_rate
+        super().save(*args, **kwargs)
+    
+    def generate_transfer_id(self):
+        """Generate a unique transfer ID"""
+        while True:
+            transfer_id = f"INT{''.join(random.choices(string.ascii_uppercase + string.digits, k=8))}"
+            if not InternationalTransfer.objects.filter(transfer_id=transfer_id).exists():
+                return transfer_id
+    
+    class Meta:
+        verbose_name = 'International Transfer'
+        verbose_name_plural = 'International Transfers'
+        ordering = ['-created_at']

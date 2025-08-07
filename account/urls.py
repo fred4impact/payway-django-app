@@ -35,4 +35,12 @@ urlpatterns = [
     path('cards/<int:card_id>/delete/', views.delete_credit_card_view, name='delete_credit_card'),
     path('cards/fund/', views.card_funding_view, name='card_funding'),
     path('cards/withdraw/', views.card_withdrawal_view, name='card_withdrawal'),
+
+    # International Transfer URLs
+    path('international/', views.international_transfers_view, name='international_transfers'),
+    path('international/create/', views.create_international_transfer_view, name='create_international_transfer'),
+    path('international/<str:transfer_id>/', views.international_transfer_detail_view, name='international_transfer_detail'),
+    path('swift-search/', views.swift_code_search_view, name='swift_code_search'),
+    path('currency-converter/', views.currency_converter_view, name='currency_converter'),
+    path('fee-calculator/', views.transfer_fee_calculator_view, name='transfer_fee_calculator'),
 ] 

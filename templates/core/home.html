@@ -4,107 +4,512 @@
 
 {% block content %}
 <!-- Hero Section -->
-<div class="row align-items-center min-vh-75">
-    <div class="col-lg-6">
-        <h1 class="display-4 fw-bold text-success mb-4">
-            Secure Digital Payments for Everyone
-        </h1>
-        <p class="lead mb-4">
-            PayWay provides a secure, fast, and reliable digital payment platform. 
-            Send money, receive payments, and manage your finances with ease.
-        </p>
-        {% if not user.is_authenticated %}
-            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                <a href="{% url 'userauths:register' %}" class="btn btn-success btn-lg px-4 me-md-2">
-                    <i class="fas fa-user-plus me-2"></i>Get Started
-                </a>
-                <a href="{% url 'userauths:login' %}" class="btn btn-outline-success btn-lg px-4">
-                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                </a>
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6">
+                <h1 class="display-3 fw-bold text-dark mb-4">
+                    Secure Digital Payments for Everyone!
+                </h1>
+                <p class="lead text-muted mb-4">
+                    PayWay provides a secure, fast, and reliable digital payment platform. Send money, receive payments, and manage your finances with ease.
+                </p>
+                {% if not user.is_authenticated %}
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-start">
+                        <a href="{% url 'userauths:register' %}" class="btn btn-success btn-lg px-4 me-md-2">
+                            <i class="fas fa-rocket me-2"></i>Get Started
+                        </a>
+                        <a href="{% url 'userauths:login' %}" class="btn btn-outline-success btn-lg px-4">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-start">
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-success btn-lg px-4 me-md-2">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                    </div>
+                {% endif %}
             </div>
-        {% else %}
-            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                <a href="{% url 'core:dashboard' %}" class="btn btn-success btn-lg px-4 me-md-2">
-                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
-                </a>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <div class="position-relative">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 300px; height: 300px;">
+                            <i class="fas fa-wallet text-success" style="font-size: 8rem;"></i>
+                        </div>
+                        <div class="position-absolute top-0 start-100 translate-middle">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <i class="fas fa-shield-alt text-success fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="position-absolute bottom-0 start-0 translate-middle">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fas fa-bolt text-success fa-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        {% endif %}
-    </div>
-    <div class="col-lg-6">
-        <div class="text-center">
-            <i class="fas fa-wallet text-success" style="font-size: 15rem; opacity: 0.3;"></i>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Features Section -->
-<div class="row mt-5 pt-5">
-    <div class="col-12 text-center mb-5">
-        <h2 class="display-5 fw-bold">Why Choose PayWay?</h2>
-        <p class="lead text-muted">Experience the future of digital payments</p>
-    </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center p-4">
-                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <i class="fas fa-shield-alt text-success" style="font-size: 2rem;"></i>
+<!-- Creative Demos Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold text-dark mb-3">Powerful Payment Features</h2>
+                <p class="lead text-muted">Experience PayWay's comprehensive payment solutions designed for modern digital transactions.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-chart-line text-success fa-2x"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">Dashboard Analytics</h5>
+                            <p class="text-muted">Experience a native pilled-styled dashboard that can be customized on the fly.</p>
+                        </div>
+                        <div class="d-grid">
+                            <a href="{% url 'core:dashboard' %}" class="btn btn-outline-success">
+                                <i class="fas fa-eye me-2"></i>Preview Dashboard
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <h5 class="card-title">Secure & Safe</h5>
-                <p class="card-text">Bank-level security with encryption and fraud detection to keep your money safe.</p>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-exchange-alt text-success fa-2x"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">Money Transfers</h5>
+                            <p class="text-muted">Build a better experience with secure and fast money transfer capabilities.</p>
+                        </div>
+                        <div class="d-grid">
+                            <a href="{% url 'account:money_transfer' %}" class="btn btn-outline-success">
+                                <i class="fas fa-paper-plane me-2"></i>Send Money
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-hand-holding-usd text-success fa-2x"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">Payment Requests</h5>
+                            <p class="text-muted">Request payments with a light and intuitive interface for better user experience.</p>
+                        </div>
+                        <div class="d-grid">
+                            <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-success">
+                                <i class="fas fa-plus me-2"></i>Create Request
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center p-4">
-                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <i class="fas fa-bolt text-success" style="font-size: 2rem;"></i>
+</section>
+
+<!-- Packed with Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold text-dark mb-3">Everything you need for digital payments</h2>
+                <p class="lead text-muted">PayWay combines security, speed, and convenience with advanced features designed for modern payment needs.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-calendar text-success fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">Transaction History</h5>
+                                <p class="text-muted mb-0">PayWay offers comprehensive transaction history with detailed analytics and reporting capabilities.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h5 class="card-title">Fast & Instant</h5>
-                <p class="card-text">Send and receive money instantly with real-time transaction processing.</p>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-shield-alt text-success fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">Security & KYC</h5>
+                                <p class="text-muted mb-0">Advanced security features with KYC verification and fraud detection to keep your money safe.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-table text-success fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">Data Tables</h5>
+                                <p class="text-muted mb-0">Showcase your transactions with datatable options that provide powerful portfolio and analytics systems.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-chart-pie text-success fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">Analytics & Charts</h5>
+                                <p class="text-muted mb-0">Cross-functional charts to deliver stunning content, data and insights faster no matter the use case.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-edit text-success fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">Advanced Forms</h5>
+                                <p class="text-muted mb-0">Upload documents, copy to clipboard, toggle passwords, search, and discover more customizable features.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                <i class="fas fa-magic text-success fa-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">Step Forms (Wizards)</h5>
+                                <p class="text-muted mb-0">Create multi-step forms, validate and navigate through steps to get more leads and increase engagement.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center p-4">
-                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <i class="fas fa-globe text-success" style="font-size: 2rem;"></i>
+</section>
+
+<!-- Applications Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold text-dark mb-3">Complete Payment Solutions</h2>
+                <p class="lead text-muted">From personal transfers to business payments, PayWay has everything you need for secure digital transactions.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-tasks text-success fa-2x"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">Transaction Management</h6>
+                        <p class="text-muted small mb-3">Manage all your transactions with ease and track your financial activities.</p>
+                        <a href="{% url 'account:transactions' %}" class="btn btn-sm btn-outline-success">View Transactions</a>
+                    </div>
                 </div>
-                <h5 class="card-title">Global Access</h5>
-                <p class="card-text">Access your account from anywhere in the world with our mobile-friendly platform.</p>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-bell text-success fa-2x"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">Notifications</h6>
+                        <p class="text-muted small mb-3">Stay updated with real-time notifications about your account activities.</p>
+                        <a href="{% url 'account:notifications' %}" class="btn btn-sm btn-outline-success">View Notifications</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-id-card text-success fa-2x"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">KYC Verification</h6>
+                        <p class="text-muted small mb-3">Complete your identity verification with our secure KYC process.</p>
+                        <a href="{% url 'account:kyc' %}" class="btn btn-sm btn-outline-success">Complete KYC</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user text-success fa-2x"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">Profile Management</h6>
+                        <p class="text-muted small mb-3">Manage your profile information and account settings securely.</p>
+                        <a href="{% url 'account:account_info' %}" class="btn btn-sm btn-outline-success">View Profile</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 <!-- Stats Section -->
-<div class="row mt-5 pt-5">
-    <div class="col-12 text-center mb-5">
-        <h2 class="display-5 fw-bold">Trusted by Millions</h2>
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold text-dark mb-3">Trusted by millions worldwide</h2>
+                <p class="lead text-muted">Join thousands of satisfied customers who trust PayWay for their digital payment needs.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="display-4 fw-bold text-success mb-2">10M+</div>
+                        <h6 class="text-muted">Active Users</h6>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="display-4 fw-bold text-success mb-2">$50B+</div>
+                        <h6 class="text-muted">Transactions Processed</h6>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="display-4 fw-bold text-success mb-2">150+</div>
+                        <h6 class="text-muted">Countries Supported</h6>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="display-4 fw-bold text-success mb-2">99.9%</div>
+                        <h6 class="text-muted">Uptime</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold text-dark mb-3">What our customers say</h2>
+                <p class="lead text-muted">Real feedback from satisfied PayWay users around the world.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">Anton</h6>
+                                <small class="text-muted">Happy customer</small>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">"This is a perfect theme for a modern web application. There was clearly a lot of thought that went into designing all of the components to look coherent and work well together in various grid layouts."</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">Marcos</h6>
+                                <small class="text-muted">Happy customer</small>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">"The theme has a very professional look, bringing a more modern and clean style to the application. The documentation is extraordinarily rich and complete, helping implementation."</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">David</h6>
+                                <small class="text-muted">Happy customer</small>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">"This theme is really great, as back end developer I was able to build an impressive front end using this theme. The source code is clear and the documentation as well."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-5 fw-bold text-dark mb-4">Ready to start sending money?</h2>
+                <p class="lead text-muted mb-4">Join millions of users who trust PayWay for fast, secure, and reliable digital payments.</p>
+                {% if not user.is_authenticated %}
+                    <div class="d-grid gap-3 d-md-flex justify-content-center">
+                        <a href="{% url 'userauths:register' %}" class="btn btn-success btn-lg px-4">
+                            <i class="fas fa-rocket me-2"></i>Get Started Now
+                        </a>
+                        <a href="{% url 'userauths:login' %}" class="btn btn-outline-success btn-lg px-4">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="d-grid gap-3 d-md-flex justify-content-center">
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-success btn-lg px-4">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+.display-3 {
+    font-size: 3.5rem;
+    font-weight: 700;
+}
+
+.display-5 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.min-vh-75 {
+    min-height: 75vh;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth scrolling for better UX
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
     
-    <div class="col-md-3 text-center mb-4">
-        <div class="display-4 fw-bold text-success">10M+</div>
-        <p class="text-muted">Active Users</p>
-    </div>
+    // Add animation on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
     
-    <div class="col-md-3 text-center mb-4">
-        <div class="display-4 fw-bold text-success">$50B+</div>
-        <p class="text-muted">Transactions Processed</p>
-    </div>
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
     
-    <div class="col-md-3 text-center mb-4">
-        <div class="display-4 fw-bold text-success">150+</div>
-        <p class="text-muted">Countries Supported</p>
-    </div>
-    
-    <div class="col-md-3 text-center mb-4">
-        <div class="display-4 fw-bold text-success">99.9%</div>
-        <p class="text-muted">Uptime</p>
-    </div>
-</div>
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+});
+</script>
 {% endblock %} 

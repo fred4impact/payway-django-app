@@ -3,212 +3,340 @@
 {% block title %}Transaction Details - PayWay{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <!-- Back Button -->
-            <div class="mb-3">
-                <a href="{% url 'account:transactions' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Back to Transactions
-                </a>
+<div class="container-fluid px-4 py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1 text-dark fw-bold">
+                        <i class="fas fa-exchange-alt me-2 text-primary"></i>
+                        Transaction Details
+                    </h1>
+                    <p class="text-muted mb-0">
+                        {% if transaction.status == 'completed' %}
+                            Good news! Your transaction was completed successfully.
+                        {% elif transaction.status == 'pending' %}
+                            Your transaction is being processed. Please wait.
+                        {% elif transaction.status == 'failed' %}
+                            We're sorry, your transaction could not be completed.
+                        {% else %}
+                            Transaction details and status information.
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-1"></i>
+                            Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF Receipt</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel Report</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i>Print</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'account:transactions' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Transactions
+                    </a>
+                </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Transaction Card -->
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">
-                            <i class="fas fa-exchange-alt me-2"></i>
-                            Transaction Details
-                        </h4>
-                        <span class="badge bg-light text-dark fs-6">{{ transaction.transaction_id }}</span>
+    <!-- Key Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas fa-dollar-sign text-primary fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Transaction Amount</h6>
+                            <h4 class="fw-bold text-dark mb-0">${{ transaction.amount|floatformat:2 }}</h4>
+                            <small class="text-muted">{{ transaction.currency }}</small>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <!-- Status Banner -->
-                    <div class="alert {% if transaction.status == 'completed' %}alert-success{% elif transaction.status == 'pending' %}alert-warning{% elif transaction.status == 'failed' %}alert-danger{% else %}alert-secondary{% endif %} mb-4">
-                        <div class="d-flex align-items-center">
-                            <i class="fas {% if transaction.status == 'completed' %}fa-check-circle{% elif transaction.status == 'pending' %}fa-clock{% elif transaction.status == 'failed' %}fa-exclamation-triangle{% else %}fa-times-circle{% endif %} me-2"></i>
-                            <div>
-                                <strong>
-                                    {% if transaction.status == 'completed' %}
-                                        Transaction Completed
-                                    {% elif transaction.status == 'pending' %}
-                                        Transaction Pending
-                                    {% elif transaction.status == 'failed' %}
-                                        Transaction Failed
-                                    {% else %}
-                                        Transaction Cancelled
-                                    {% endif %}
-                                </strong>
-                                <br><small>{{ transaction.created_at|date:"F d, Y \a\t g:i A" }}</small>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% elif transaction.status == 'failed' %}danger{% else %}secondary{% endif %} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas {% if transaction.status == 'completed' %}fa-check-circle{% elif transaction.status == 'pending' %}fa-clock{% elif transaction.status == 'failed' %}fa-exclamation-triangle{% else %}fa-times-circle{% endif %} text-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% elif transaction.status == 'failed' %}danger{% else %}secondary{% endif %} fa-lg"></i>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Transaction Information -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5 class="text-primary mb-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Transaction Information
-                            </h5>
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td class="fw-bold">Amount:</td>
-                                    <td class="fs-5 text-success fw-bold">${{ transaction.amount|floatformat:2 }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Currency:</td>
-                                    <td>{{ transaction.currency }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Type:</td>
-                                    <td>
-                                        <span class="badge bg-info">{{ transaction.get_transaction_type_display }}</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Status:</td>
-                                    <td>
-                                        <span class="badge {% if transaction.status == 'completed' %}bg-success{% elif transaction.status == 'pending' %}bg-warning{% elif transaction.status == 'failed' %}bg-danger{% else %}bg-secondary{% endif %}">
-                                            {{ transaction.get_status_display }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% if transaction.transaction_fee > 0 %}
-                                <tr>
-                                    <td class="fw-bold">Transaction Fee:</td>
-                                    <td class="text-muted">${{ transaction.transaction_fee|floatformat:2 }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Total Amount:</td>
-                                    <td class="fw-bold">${{ transaction.total_amount|floatformat:2 }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if transaction.description %}
-                                <tr>
-                                    <td class="fw-bold">Description:</td>
-                                    <td>{{ transaction.description }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if transaction.reference %}
-                                <tr>
-                                    <td class="fw-bold">Reference:</td>
-                                    <td>{{ transaction.reference }}</td>
-                                </tr>
-                                {% endif %}
-                                <tr>
-                                    <td class="fw-bold">Created:</td>
-                                    <td>{{ transaction.created_at|date:"F d, Y \a\t g:i A" }}</td>
-                                </tr>
-                                {% if transaction.completed_at %}
-                                <tr>
-                                    <td class="fw-bold">Completed:</td>
-                                    <td class="text-success">{{ transaction.completed_at|date:"F d, Y \a\t g:i A" }}</td>
-                                </tr>
-                                {% endif %}
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h5 class="text-primary mb-3">
-                                <i class="fas fa-users me-2"></i>
-                                User Information
-                            </h5>
-                            
-                            <!-- Sender Info -->
-                            <div class="card border-primary mb-3">
-                                <div class="card-header bg-primary text-white">
-                                    <i class="fas fa-user-minus me-2"></i>
-                                    Sent From
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-lg me-3">
-                                            <i class="fas fa-user-circle fa-3x text-primary"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1">{{ transaction.sender.get_full_name|default:"No Name" }}</h6>
-                                            <p class="mb-1 text-muted">{{ transaction.sender.email }}</p>
-                                            <small class="text-muted">Account: {{ transaction.sender_account.account_number }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Receiver Info -->
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white">
-                                    <i class="fas fa-user-plus me-2"></i>
-                                    Sent To
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-lg me-3">
-                                            <i class="fas fa-user-circle fa-3x text-success"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1">{{ transaction.receiver.get_full_name|default:"No Name" }}</h6>
-                                            <p class="mb-1 text-muted">{{ transaction.receiver.email }}</p>
-                                            <small class="text-muted">Account: {{ transaction.receiver_account.account_number }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Security Information -->
-                    {% if transaction.is_verified or transaction.verification_code %}
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white">
-                                    <i class="fas fa-shield-alt me-2"></i>
-                                    Security Information
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        {% if transaction.is_verified %}
-                                        <div class="col-md-6">
-                                            <p class="mb-1"><strong>Verification Status:</strong></p>
-                                            <span class="badge bg-success">Verified</span>
-                                        </div>
-                                        {% endif %}
-                                        {% if transaction.verification_code %}
-                                        <div class="col-md-6">
-                                            <p class="mb-1"><strong>Verification Code:</strong></p>
-                                            <code>{{ transaction.verification_code }}</code>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Action Buttons -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-center gap-3">
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Status</h6>
+                            <h4 class="fw-bold text-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% elif transaction.status == 'failed' %}danger{% else %}secondary{% endif %} mb-0">
+                                {{ transaction.get_status_display }}
+                            </h4>
+                            <small class="text-muted">
                                 {% if transaction.status == 'completed' %}
-                                    <div class="text-center">
-                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                                        <p class="text-success fw-bold">Transaction completed successfully!</p>
-                                    </div>
+                                    Completed successfully
                                 {% elif transaction.status == 'pending' %}
-                                    <div class="text-center">
-                                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
-                                        <p class="text-warning fw-bold">Transaction is being processed</p>
-                                    </div>
+                                    Processing
                                 {% elif transaction.status == 'failed' %}
-                                    <div class="text-center">
-                                        <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
-                                        <p class="text-danger fw-bold">Transaction failed</p>
-                                    </div>
+                                    Failed to process
+                                {% else %}
+                                    Cancelled
                                 {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas fa-tag text-info fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Transaction Type</h6>
+                            <h4 class="fw-bold text-dark mb-0">{{ transaction.get_transaction_type_display }}</h4>
+                            <small class="text-muted">Transfer</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas fa-calendar text-warning fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Date & Time</h6>
+                            <h4 class="fw-bold text-dark mb-0">{{ transaction.created_at|date:"M d" }}</h4>
+                            <small class="text-muted">{{ transaction.created_at|date:"g:i A" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column - Transaction Details -->
+        <div class="col-xl-8">
+            <!-- Transaction Information Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                        Transaction Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-hashtag text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Transaction ID</h6>
+                                    <p class="mb-0 text-muted">{{ transaction.transaction_id }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-dollar-sign text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Amount</h6>
+                                    <p class="mb-0 text-muted">${{ transaction.amount|floatformat:2 }} {{ transaction.currency }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% if transaction.transaction_fee > 0 %}
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-percentage text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Transaction Fee</h6>
+                                    <p class="mb-0 text-muted">${{ transaction.transaction_fee|floatformat:2 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-calculator text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Total Amount</h6>
+                                    <p class="mb-0 text-muted">${{ transaction.total_amount|floatformat:2 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if transaction.description %}
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-file-alt text-secondary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Description</h6>
+                                    <p class="mb-0 text-muted">{{ transaction.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if transaction.reference %}
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-dark bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-link text-dark"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Reference</h6>
+                                    <p class="mb-0 text-muted">{{ transaction.reference }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-calendar-plus text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Created</h6>
+                                    <p class="mb-0 text-muted">{{ transaction.created_at|date:"M d, Y g:i A" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% if transaction.completed_at %}
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Completed</h6>
+                                    <p class="mb-0 text-muted">{{ transaction.completed_at|date:"M d, Y g:i A" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Information -->
+            {% if transaction.is_verified or transaction.verification_code %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-shield-alt me-2 text-warning"></i>
+                        Security Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        {% if transaction.is_verified %}
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-shield-check text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Verification Status</h6>
+                                    <span class="badge bg-success-subtle text-success">Verified</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if transaction.verification_code %}
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-key text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Verification Code</h6>
+                                    <code class="bg-light px-2 py-1 rounded">{{ transaction.verification_code }}</code>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - User Information & Actions -->
+        <div class="col-xl-4">
+            <!-- User Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-users me-2 text-info"></i>
+                        User Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Sender Info -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-user-minus me-2 text-primary"></i>
+                            Sent From
+                        </h6>
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                <i class="fas fa-user text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">{{ transaction.sender.get_full_name|default:"No Name" }}</h6>
+                                <p class="mb-1 text-muted small">{{ transaction.sender.email }}</p>
+                                <small class="text-muted">Account: {{ transaction.sender_account.account_number }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Receiver Info -->
+                    <div>
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-user-plus me-2 text-success"></i>
+                            Sent To
+                        </h6>
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                <i class="fas fa-user text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">{{ transaction.receiver.get_full_name|default:"No Name" }}</h6>
+                                <p class="mb-1 text-muted small">{{ transaction.receiver.email }}</p>
+                                <small class="text-muted">Account: {{ transaction.receiver_account.account_number }}</small>
                             </div>
                         </div>
                     </div>
@@ -216,49 +344,120 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <div class="card border-primary">
-                        <div class="card-body text-center">
-                            <i class="fas fa-paper-plane fa-2x text-primary mb-2"></i>
-                            <h6>Send Money</h6>
-                            <a href="{% url 'account:money_transfer' %}" class="btn btn-outline-primary btn-sm">
-                                Send Money
-                            </a>
-                        </div>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-bolt me-2 text-warning"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'account:money_transfer' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Send Money
+                        </a>
+                        <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-info">
+                            <i class="fas fa-hand-holding-usd me-2"></i>
+                            Request Money
+                        </a>
+                        <a href="{% url 'account:transactions' %}" class="btn btn-outline-success">
+                            <i class="fas fa-list me-2"></i>
+                            View All Transactions
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card border-info">
-                        <div class="card-body text-center">
-                            <i class="fas fa-hand-holding-usd fa-2x text-info mb-2"></i>
-                            <h6>Request Money</h6>
-                            <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-info btn-sm">
-                                Request Money
-                            </a>
-                        </div>
-                    </div>
+            </div>
+
+            <!-- Transaction Status -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>
+                        Transaction Status
+                    </h5>
                 </div>
-                <div class="col-md-4">
-                    <div class="card border-success">
-                        <div class="card-body text-center">
-                            <i class="fas fa-list fa-2x text-success mb-2"></i>
-                            <h6>All Transactions</h6>
-                            <a href="{% url 'account:transactions' %}" class="btn btn-outline-success btn-sm">
-                                View All
-                            </a>
+                <div class="card-body p-4">
+                    {% if transaction.status == 'completed' %}
+                        <div class="text-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            </div>
+                            <h6 class="fw-bold text-success mb-2">Transaction Completed</h6>
+                            <p class="text-muted small mb-0">Your transaction was processed successfully</p>
                         </div>
-                    </div>
+                    {% elif transaction.status == 'pending' %}
+                        <div class="text-center">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                            <h6 class="fw-bold text-warning mb-2">Transaction Pending</h6>
+                            <p class="text-muted small mb-0">Your transaction is being processed</p>
+                        </div>
+                    {% elif transaction.status == 'failed' %}
+                        <div class="text-center">
+                            <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                                <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                            </div>
+                            <h6 class="fw-bold text-danger mb-2">Transaction Failed</h6>
+                            <p class="text-muted small mb-0">Your transaction could not be completed</p>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                                <i class="fas fa-times-circle fa-2x text-secondary"></i>
+                            </div>
+                            <h6 class="fw-bold text-secondary mb-2">Transaction Cancelled</h6>
+                            <p class="text-muted small mb-0">Your transaction was cancelled</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875em;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Add any JavaScript functionality here if needed
     console.log('Transaction detail page loaded');
+    
+    // Add smooth scrolling for better UX
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
 });
 </script>
 {% endblock %}
