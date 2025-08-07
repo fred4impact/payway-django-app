@@ -27,4 +27,12 @@ urlpatterns = [
     path('notifications/', views.notifications_view, name='notifications'),
     path('notifications/count/', views.notification_count_view, name='notification_count'),
     path('notification/<int:notification_id>/read/', views.mark_notification_read_view, name='mark_notification_read'),
+    
+    # Credit Cards
+    path('cards/', views.credit_cards_view, name='credit_cards'),
+    path('cards/add/', views.add_credit_card_view, name='add_credit_card'),
+    path('cards/<int:card_id>/edit/', views.edit_credit_card_view, name='edit_credit_card'),
+    path('cards/<int:card_id>/delete/', views.delete_credit_card_view, name='delete_credit_card'),
+    path('cards/fund/', views.card_funding_view, name='card_funding'),
+    path('cards/withdraw/', views.card_withdrawal_view, name='card_withdrawal'),
 ] 

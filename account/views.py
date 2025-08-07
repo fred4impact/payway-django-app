@@ -8,8 +8,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
 import csv
-from .forms import KYCForm, AccountSearchForm, MoneyTransferForm, PaymentRequestForm, TransactionFilterForm
-from .models import KYC, Account, Transaction, PaymentRequest, Notification
+from .forms import KYCForm, AccountSearchForm, MoneyTransferForm, PaymentRequestForm, TransactionFilterForm, CreditCardForm, CardFundingForm, CardWithdrawalForm
+from .models import KYC, Account, Transaction, PaymentRequest, Notification, CreditCard
 from userauths.models import User
 
 
@@ -521,6 +521,249 @@ def notification_count_view(request):
         })
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# Credit Card Views
+@login_required
+def credit_cards_view(request):
+    """View and manage credit cards"""
+    cards = CreditCard.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'cards': cards,
+    }
+    return render(request, 'account/credit_cards.html', context)
+
+
+@login_required
+def add_credit_card_view(request):
+    """Add a new credit card"""
+    if request.method == 'POST':
+        form = CreditCardForm(request.POST)
+        if form.is_valid():
+            card = form.save(commit=False)
+            card.user = request.user
+            
+            # Process card data
+            card_number = form.cleaned_data['card_number'].replace(' ', '').replace('-', '')
+            cvv = form.cleaned_data['cvv']
+            
+            # Detect card type
+            card_type, card_brand = card.detect_card_type(card_number)
+            card.card_type = card_type
+            card.card_brand = card_brand
+            
+            # Set display fields
+            card.last_four_digits = card.get_last_four_digits(card_number)
+            card.masked_number = card.mask_card_number(card_number)
+            
+            # Encrypt sensitive data
+            card.encrypt_card_data(card_number, cvv)
+            
+            card.save()
+            
+            messages.success(request, f'{card_brand} card ending in {card.last_four_digits} added successfully!')
+            return redirect('account:credit_cards')
+    else:
+        form = CreditCardForm()
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'account/add_credit_card.html', context)
+
+
+@login_required
+def edit_credit_card_view(request, card_id):
+    """Edit credit card details"""
+    card = get_object_or_404(CreditCard, id=card_id, user=request.user)
+    
+    if request.method == 'POST':
+        form = CreditCardForm(request.POST, instance=card)
+        if form.is_valid():
+            card = form.save(commit=False)
+            
+            # Process card data if provided
+            if 'card_number' in form.cleaned_data and form.cleaned_data['card_number']:
+                card_number = form.cleaned_data['card_number'].replace(' ', '').replace('-', '')
+                cvv = form.cleaned_data['cvv']
+                
+                # Update card type and brand
+                card_type, card_brand = card.detect_card_type(card_number)
+                card.card_type = card_type
+                card.card_brand = card_brand
+                
+                # Update display fields
+                card.last_four_digits = card.get_last_four_digits(card_number)
+                card.masked_number = card.mask_card_number(card_number)
+                
+                # Re-encrypt sensitive data
+                card.encrypt_card_data(card_number, cvv)
+            
+            card.save()
+            
+            messages.success(request, f'{card.card_brand} card updated successfully!')
+            return redirect('account:credit_cards')
+    else:
+        form = CreditCardForm(instance=card)
+    
+    context = {
+        'form': form,
+        'card': card,
+    }
+    return render(request, 'account/edit_credit_card.html', context)
+
+
+@login_required
+def delete_credit_card_view(request, card_id):
+    """Delete a credit card"""
+    card = get_object_or_404(CreditCard, id=card_id, user=request.user)
+    
+    if request.method == 'POST':
+        card.delete()
+        messages.success(request, f'{card.card_brand} card deleted successfully!')
+        return redirect('account:credit_cards')
+    
+    context = {
+        'card': card,
+    }
+    return render(request, 'account/delete_credit_card.html', context)
+
+
+@login_required
+def card_funding_view(request):
+    """Fund account from credit card"""
+    if request.method == 'POST':
+        form = CardFundingForm(request.user, request.POST)
+        if form.is_valid():
+            card = form.cleaned_data['card']
+            amount = form.cleaned_data['amount']
+            description = form.cleaned_data.get('description', '')
+            
+            # Check if card can be used for funding
+            if not card.can_fund(amount):
+                messages.error(request, 'Card cannot be used for this amount. Check daily/monthly limits.')
+                return redirect('account:card_funding')
+            
+            try:
+                with transaction.atomic():
+                    # Create transaction record
+                    funding_transaction = Transaction.objects.create(
+                        transaction_type='card_funding',
+                        amount=amount,
+                        currency='USD',
+                        sender=request.user,
+                        receiver=request.user,
+                        sender_account=request.user.account,
+                        receiver_account=request.user.account,
+                        status='completed',
+                        description=f'Card funding: {description}' if description else 'Card funding',
+                        reference=f'CARD_FUND_{card.last_four_digits}',
+                        transaction_fee=Decimal('0.00'),
+                        total_amount=amount,
+                        is_verified=True,
+                        completed_at=timezone.now()
+                    )
+                    
+                    # Update account balance
+                    request.user.account.account_balance += amount
+                    request.user.account.save()
+                    
+                    # Update card usage
+                    card.total_funded += amount
+                    card.last_used = timezone.now()
+                    card.save()
+                    
+                    # Create notification
+                    Notification.objects.create(
+                        user=request.user,
+                        notification_type='transaction',
+                        title='Account Funded',
+                        message=f'Your account has been funded with ${amount:.2f} from your {card.card_brand} card ending in {card.last_four_digits}.',
+                        transaction=funding_transaction
+                    )
+                    
+                    messages.success(request, f'Account funded successfully with ${amount:.2f}!')
+                    return redirect('account:transaction_detail', transaction_id=funding_transaction.transaction_id)
+                    
+            except Exception as e:
+                messages.error(request, f'Funding failed: {str(e)}')
+                return redirect('account:card_funding')
+    else:
+        form = CardFundingForm(request.user)
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'account/card_funding.html', context)
+
+
+@login_required
+def card_withdrawal_view(request):
+    """Withdraw money to credit card"""
+    if request.method == 'POST':
+        form = CardWithdrawalForm(request.user, request.POST)
+        if form.is_valid():
+            card = form.cleaned_data['card']
+            amount = form.cleaned_data['amount']
+            description = form.cleaned_data.get('description', '')
+            
+            # Check if withdrawal is possible
+            if not card.can_withdraw(amount):
+                messages.error(request, 'Insufficient balance or card cannot be used for withdrawal.')
+                return redirect('account:card_withdrawal')
+            
+            try:
+                with transaction.atomic():
+                    # Create transaction record
+                    withdrawal_transaction = Transaction.objects.create(
+                        transaction_type='withdrawal',
+                        amount=amount,
+                        currency='USD',
+                        sender=request.user,
+                        receiver=request.user,
+                        sender_account=request.user.account,
+                        receiver_account=request.user.account,
+                        status='completed',
+                        description=f'Card withdrawal: {description}' if description else 'Card withdrawal',
+                        reference=f'CARD_WITHDRAW_{card.last_four_digits}',
+                        transaction_fee=Decimal('0.00'),
+                        total_amount=amount,
+                        is_verified=True,
+                        completed_at=timezone.now()
+                    )
+                    
+                    # Update account balance
+                    request.user.account.account_balance -= amount
+                    request.user.account.save()
+                    
+                    # Update card usage
+                    card.total_withdrawn += amount
+                    card.last_used = timezone.now()
+                    card.save()
+                    
+                    # Create notification
+                    Notification.objects.create(
+                        user=request.user,
+                        notification_type='transaction',
+                        title='Withdrawal Completed',
+                        message=f'${amount:.2f} has been withdrawn to your {card.card_brand} card ending in {card.last_four_digits}.',
+                        transaction=withdrawal_transaction
+                    )
+                    
+                    messages.success(request, f'Withdrawal of ${amount:.2f} completed successfully!')
+                    return redirect('account:transaction_detail', transaction_id=withdrawal_transaction.transaction_id)
+                    
+            except Exception as e:
+                messages.error(request, f'Withdrawal failed: {str(e)}')
+                return redirect('account:card_withdrawal')
+    else:
+        form = CardWithdrawalForm(request.user)
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'account/card_withdrawal.html', context)
 
 
 # Utility Views

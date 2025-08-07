@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Account, KYC, Transaction, PaymentRequest, Notification
+from .models import Account, KYC, Transaction, PaymentRequest, Notification, CreditCard
 
 
 @admin.register(Account)
@@ -131,3 +131,40 @@ class NotificationAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(CreditCard)
+class CreditCardAdmin(admin.ModelAdmin):
+    list_display = ['user', 'card_brand', 'last_four_digits', 'card_holder_name', 'status', 'is_default', 'created_at']
+    list_filter = ['card_type', 'status', 'is_default', 'is_verified', 'created_at']
+    search_fields = ['user__email', 'card_holder_name', 'last_four_digits']
+    readonly_fields = ['created_at', 'updated_at', 'verified_at', 'last_used', 'masked_number', 'last_four_digits']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Card Information', {
+            'fields': ('user', 'card_holder_name', 'card_type', 'card_brand', 'masked_number', 'last_four_digits')
+        }),
+        ('Card Details', {
+            'fields': ('expiry_month', 'expiry_year', 'card_number_encrypted', 'cvv_encrypted'),
+            'classes': ('collapse',)
+        }),
+        ('Status & Settings', {
+            'fields': ('status', 'is_default', 'is_verified')
+        }),
+        ('Security & Limits', {
+            'fields': ('daily_limit', 'monthly_limit', 'failed_attempts', 'locked_until'),
+            'classes': ('collapse',)
+        }),
+        ('Usage Tracking', {
+            'fields': ('total_funded', 'total_withdrawn', 'last_used'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'verified_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')

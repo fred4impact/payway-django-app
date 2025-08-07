@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Credit Card - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Credit Card
+                    </h4>
+                    <p class="mb-0">Add a new credit or debit card to your PayWay account</p>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Card Number -->
+                        <div class="mb-3">
+                            <label for="{{ form.card_number.id_for_label }}" class="form-label">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Card Number
+                            </label>
+                            {{ form.card_number }}
+                            {% if form.card_number.errors %}
+                                <div class="text-danger small">{{ form.card_number.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Enter your 13-19 digit card number</small>
+                        </div>
+
+                        <!-- Cardholder Name -->
+                        <div class="mb-3">
+                            <label for="{{ form.card_holder_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-user me-2"></i>
+                                Cardholder Name
+                            </label>
+                            {{ form.card_holder_name }}
+                            {% if form.card_holder_name.errors %}
+                                <div class="text-danger small">{{ form.card_holder_name.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Name as it appears on the card</small>
+                        </div>
+
+                        <!-- Expiry Date -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.expiry_month.id_for_label }}" class="form-label">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        Expiry Month
+                                    </label>
+                                    {{ form.expiry_month }}
+                                    {% if form.expiry_month.errors %}
+                                        <div class="text-danger small">{{ form.expiry_month.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.expiry_year.id_for_label }}" class="form-label">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        Expiry Year
+                                    </label>
+                                    {{ form.expiry_year }}
+                                    {% if form.expiry_year.errors %}
+                                        <div class="text-danger small">{{ form.expiry_year.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CVV -->
+                        <div class="mb-3">
+                            <label for="{{ form.cvv.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock me-2"></i>
+                                Security Code (CVV)
+                            </label>
+                            {{ form.cvv }}
+                            {% if form.cvv.errors %}
+                                <div class="text-danger small">{{ form.cvv.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">3 or 4 digit security code on the back of your card</small>
+                        </div>
+
+                        <!-- Card Settings -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-cog me-2"></i>
+                                    Card Settings
+                                </h6>
+                                
+                                <!-- Default Card -->
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.is_default }}
+                                        <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                            Set as default payment method
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">This card will be used as your primary payment method</small>
+                                </div>
+
+                                <!-- Daily Limit -->
+                                <div class="mb-3">
+                                    <label for="{{ form.daily_limit.id_for_label }}" class="form-label">Daily Spending Limit</label>
+                                    {{ form.daily_limit }}
+                                    {% if form.daily_limit.errors %}
+                                        <div class="text-danger small">{{ form.daily_limit.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Maximum amount that can be spent per day</small>
+                                </div>
+
+                                <!-- Monthly Limit -->
+                                <div class="mb-3">
+                                    <label for="{{ form.monthly_limit.id_for_label }}" class="form-label">Monthly Spending Limit</label>
+                                    {{ form.monthly_limit }}
+                                    {% if form.monthly_limit.errors %}
+                                        <div class="text-danger small">{{ form.monthly_limit.errors }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Maximum amount that can be spent per month</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Information -->
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Security & Privacy
+                            </h6>
+                            <ul class="mb-0">
+                                <li>Your card information is encrypted and stored securely</li>
+                                <li>We never store your full card number - only the last 4 digits are visible</li>
+                                <li>All transactions are processed using industry-standard security</li>
+                                <li>You can remove this card at any time from your account settings</li>
+                            </ul>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'account:credit_cards' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                Add Card
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Supported Cards -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Supported Card Types
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-2">
+                            <i class="fab fa-cc-visa fa-2x text-primary mb-2"></i>
+                            <div><strong>Visa</strong></div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <i class="fab fa-cc-mastercard fa-2x text-warning mb-2"></i>
+                            <div><strong>Mastercard</strong></div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <i class="fab fa-cc-amex fa-2x text-info mb-2"></i>
+                            <div><strong>American Express</strong></div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <i class="fab fa-cc-discover fa-2x text-success mb-2"></i>
+                            <div><strong>Discover</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-format card number with spaces
+document.addEventListener('DOMContentLoaded', function() {
+    const cardNumberInput = document.getElementById('{{ form.card_number.id_for_label }}');
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+            let formattedValue = value.replace(/\d{4}(?=.)/g, '$& ');
+            e.target.value = formattedValue;
+        });
+    }
+
+    // Auto-format CVV
+    const cvvInput = document.getElementById('{{ form.cvv.id_for_label }}');
+    if (cvvInput) {
+        cvvInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^0-9]/gi, '');
+            e.target.value = value;
+        });
+    }
+});
+</script>
+{% endblock %}
