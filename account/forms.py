@@ -1,5 +1,6 @@
 from django import forms
-from .models import KYC, Transaction, PaymentRequest, Account
+from django.utils import timezone
+from .models import KYC, Transaction, PaymentRequest, Account, CreditCard
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column
 from django.contrib.auth import get_user_model
@@ -243,4 +244,265 @@ class TransactionFilterForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_method = 'get'
         self.helper.add_input(Submit('filter', 'Filter', css_class='btn btn-outline-primary btn-sm'))
-        self.helper.add_input(Submit('export', 'Export CSV', css_class='btn btn-outline-success btn-sm')) 
+        self.helper.add_input(Submit('export', 'Export CSV', css_class='btn btn-outline-success btn-sm'))
+
+
+class CreditCardForm(forms.ModelForm):
+    """Form for adding/editing credit cards"""
+    card_number = forms.CharField(
+        max_length=19,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '1234 5678 9012 3456',
+            'data-mask': '0000 0000 0000 0000'
+        }),
+        help_text='Enter your card number'
+    )
+    
+    cvv = forms.CharField(
+        max_length=4,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '123',
+            'data-mask': '0000'
+        }),
+        help_text='3 or 4 digit security code'
+    )
+    
+    expiry_month = forms.ChoiceField(
+        choices=[(i, f'{i:02d}') for i in range(1, 13)],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    expiry_year = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(timezone.now().year, timezone.now().year + 11)],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    is_default = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        help_text='Set as default payment method'
+    )
+    
+    daily_limit = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        initial=1000.00,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'min': '0.01'
+        }),
+        help_text='Maximum daily spending limit'
+    )
+    
+    monthly_limit = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        initial=5000.00,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'min': '0.01'
+        }),
+        help_text='Maximum monthly spending limit'
+    )
+    
+    class Meta:
+        model = CreditCard
+        fields = ['card_holder_name']
+        widgets = {
+            'card_holder_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Cardholder Name'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('save', 'Save Card', css_class='btn btn-primary btn-lg w-100'))
+    
+    def clean_card_number(self):
+        card_number = self.cleaned_data['card_number'].replace(' ', '').replace('-', '')
+        
+        # Basic validation
+        if not card_number.isdigit():
+            raise forms.ValidationError('Card number must contain only digits')
+        
+        if len(card_number) < 13 or len(card_number) > 19:
+            raise forms.ValidationError('Card number must be between 13 and 19 digits')
+        
+        # Luhn algorithm validation
+        if not self.instance.validate_card_number(card_number):
+            raise forms.ValidationError('Invalid card number')
+        
+        return card_number
+    
+    def clean_cvv(self):
+        cvv = self.cleaned_data['cvv']
+        
+        if not cvv.isdigit():
+            raise forms.ValidationError('CVV must contain only digits')
+        
+        card_number = self.cleaned_data.get('card_number', '')
+        card_type, _ = self.instance.detect_card_type(card_number)
+        
+        if card_type == 'amex' and len(cvv) != 4:
+            raise forms.ValidationError('American Express cards require 4-digit CVV')
+        elif card_type != 'amex' and len(cvv) != 3:
+            raise forms.ValidationError('CVV must be 3 digits for this card type')
+        
+        return cvv
+    
+    def clean_expiry_month(self):
+        month = int(self.cleaned_data['expiry_month'])
+        year = int(self.cleaned_data['expiry_year'])
+        
+        if not self.instance.validate_expiry_date(month, year):
+            raise forms.ValidationError('Card has expired')
+        
+        return month
+    
+    def clean_expiry_year(self):
+        return int(self.cleaned_data['expiry_year'])
+    
+    def save(self, commit=True):
+        card = super().save(commit=False)
+        
+        # Process card data
+        card_number = self.cleaned_data['card_number'].replace(' ', '').replace('-', '')
+        cvv = self.cleaned_data['cvv']
+        
+        # Detect card type
+        card_type, card_brand = card.detect_card_type(card_number)
+        card.card_type = card_type
+        card.card_brand = card_brand
+        
+        # Set display fields
+        card.last_four_digits = card.get_last_four_digits(card_number)
+        card.masked_number = card.mask_card_number(card_number)
+        
+        # Encrypt sensitive data
+        card.encrypt_card_data(card_number, cvv)
+        
+        if commit:
+            card.save()
+        
+        return card
+
+
+class CardFundingForm(forms.Form):
+    """Form for funding account from credit card"""
+    card = forms.ModelChoiceField(
+        queryset=None,
+        empty_label=None,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        help_text='Select the card to use for funding'
+    )
+    
+    amount = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '0.00',
+            'step': '0.01',
+            'min': '0.01'
+        }),
+        help_text='Amount to add to your account'
+    )
+    
+    description = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Optional description'
+        }),
+        help_text='Optional description for this funding'
+    )
+    
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.fields['card'].queryset = user.credit_cards.filter(status='active')
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('fund', 'Fund Account', css_class='btn btn-success btn-lg w-100'))
+    
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount <= 0:
+            raise forms.ValidationError('Amount must be greater than zero')
+        return amount
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        card = cleaned_data.get('card')
+        amount = cleaned_data.get('amount')
+        
+        if card and amount:
+            if not card.can_fund(amount):
+                raise forms.ValidationError('Card cannot be used for this amount. Check daily/monthly limits.')
+        
+        return cleaned_data
+
+
+class CardWithdrawalForm(forms.Form):
+    """Form for withdrawing money to credit card"""
+    card = forms.ModelChoiceField(
+        queryset=None,
+        empty_label=None,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        help_text='Select the card to withdraw to'
+    )
+    
+    amount = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '0.00',
+            'step': '0.01',
+            'min': '0.01'
+        }),
+        help_text='Amount to withdraw from your account'
+    )
+    
+    description = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Optional description'
+        }),
+        help_text='Optional description for this withdrawal'
+    )
+    
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.fields['card'].queryset = user.credit_cards.filter(status='active')
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('withdraw', 'Withdraw to Card', css_class='btn btn-warning btn-lg w-100'))
+    
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount <= 0:
+            raise forms.ValidationError('Amount must be greater than zero')
+        return amount
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        card = cleaned_data.get('card')
+        amount = cleaned_data.get('amount')
+        
+        if card and amount:
+            if not card.can_withdraw(amount):
+                raise forms.ValidationError('Insufficient balance or card cannot be used for withdrawal')
+        
+        return cleaned_data 

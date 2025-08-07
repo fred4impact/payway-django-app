@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Withdraw to Card - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-arrow-up me-2"></i>
+                        Withdraw to Card
+                    </h4>
+                    <p class="mb-0">Withdraw money from your PayWay account to your credit card</p>
+                </div>
+                <div class="card-body">
+                    <!-- Current Balance -->
+                    <div class="alert alert-info">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">Available Balance</h6>
+                                <h3 class="text-success mb-0">${{ user.account.account_balance|floatformat:2 }}</h3>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <small class="text-muted">Account: {{ user.account.account_number }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Withdrawal Form -->
+                    {% if form.fields.card.queryset %}
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.card.id_for_label }}" class="form-label">
+                                            <i class="fas fa-credit-card me-2"></i>
+                                            Select Card
+                                        </label>
+                                        {{ form.card }}
+                                        {% if form.card.errors %}
+                                            <div class="text-danger small">{{ form.card.errors }}</div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Choose the card you want to withdraw to</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                            <i class="fas fa-dollar-sign me-2"></i>
+                                            Amount
+                                        </label>
+                                        {{ form.amount }}
+                                        {% if form.amount.errors %}
+                                            <div class="text-danger small">{{ form.amount.errors }}</div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Enter the amount you want to withdraw</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">
+                                    <i class="fas fa-comment me-2"></i>
+                                    Description (Optional)
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Add a note to help you remember this withdrawal</small>
+                            </div>
+
+                            <!-- Withdrawal Information -->
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Withdrawal Information
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Processing Time</small><br>
+                                            <strong>1-3 Business Days</strong>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Transaction Fee</small><br>
+                                            <strong class="text-success">$0.00</strong>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Minimum Amount</small><br>
+                                            <strong>$1.00</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'account:credit_cards' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Back to Cards
+                                </a>
+                                <button type="submit" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-arrow-up me-2"></i>
+                                    Withdraw to Card
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Active Cards</h5>
+                            <p class="text-muted">You need to add a credit card before you can withdraw money.</p>
+                            <a href="{% url 'account:add_credit_card' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Add Credit Card
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Security Information -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Security & Processing
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                                <h6>Processing Time</h6>
+                                <small class="text-muted">1-3 business days for processing</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-lock fa-2x text-info mb-2"></i>
+                                <h6>Secure Transfer</h6>
+                                <small class="text-muted">All withdrawals are secure and encrypted</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-receipt fa-2x text-info mb-2"></i>
+                                <h6>Transaction History</h6>
+                                <small class="text-muted">All withdrawal transactions are recorded</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

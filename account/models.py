@@ -3,6 +3,10 @@ from django.contrib.auth import get_user_model
 from decimal import Decimal
 import random
 import string
+import re
+import uuid
+from cryptography.fernet import Fernet
+from django.conf import settings
 
 User = get_user_model()
 
@@ -260,3 +264,222 @@ class KYC(models.Model):
     class Meta:
         verbose_name = 'KYC'
         verbose_name_plural = 'KYC Documents'
+
+
+class CreditCard(models.Model):
+    CARD_TYPES = [
+        ('visa', 'Visa'),
+        ('mastercard', 'Mastercard'),
+        ('amex', 'American Express'),
+        ('discover', 'Discover'),
+        ('other', 'Other'),
+    ]
+    
+    CARD_STATUS = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('expired', 'Expired'),
+        ('suspended', 'Suspended'),
+    ]
+    
+    # Card owner
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='credit_cards')
+    
+    # Card details (encrypted)
+    card_number_encrypted = models.TextField()  # Encrypted card number
+    card_holder_name = models.CharField(max_length=255)
+    expiry_month = models.IntegerField()
+    expiry_year = models.IntegerField()
+    cvv_encrypted = models.TextField()  # Encrypted CVV
+    
+    # Card metadata
+    card_type = models.CharField(max_length=20, choices=CARD_TYPES)
+    card_brand = models.CharField(max_length=50)  # Visa, Mastercard, etc.
+    last_four_digits = models.CharField(max_length=4)  # Last 4 digits for display
+    masked_number = models.CharField(max_length=19)  # **** **** **** 1234
+    
+    # Card status
+    status = models.CharField(max_length=20, choices=CARD_STATUS, default='active')
+    is_default = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    
+    # Security features
+    daily_limit = models.DecimalField(max_digits=15, decimal_places=2, default=1000.00)
+    monthly_limit = models.DecimalField(max_digits=15, decimal_places=2, default=5000.00)
+    failed_attempts = models.IntegerField(default=0)
+    locked_until = models.DateTimeField(blank=True, null=True)
+    
+    # Usage tracking
+    total_funded = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    total_withdrawn = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    last_used = models.DateTimeField(blank=True, null=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.card_brand} ****{self.last_four_digits} - {self.user.email}"
+    
+    def save(self, *args, **kwargs):
+        # Generate card ID if not exists
+        if not hasattr(self, 'card_id'):
+            self.card_id = self.generate_card_id()
+        
+        # Set default card if this is the first card
+        if not self.user.credit_cards.exists():
+            self.is_default = True
+        
+        # Ensure only one default card per user
+        if self.is_default:
+            self.user.credit_cards.exclude(id=self.id).update(is_default=False)
+        
+        super().save(*args, **kwargs)
+    
+    def generate_card_id(self):
+        """Generate a unique card ID"""
+        return f"CARD{str(uuid.uuid4())[:8].upper()}"
+    
+    def encrypt_card_data(self, card_number, cvv):
+        """Encrypt sensitive card data"""
+        if not hasattr(settings, 'ENCRYPTION_KEY'):
+            # Generate a key if not exists (for development)
+            key = Fernet.generate_key()
+            settings.ENCRYPTION_KEY = key
+        
+        fernet = Fernet(settings.ENCRYPTION_KEY)
+        self.card_number_encrypted = fernet.encrypt(card_number.encode()).decode()
+        self.cvv_encrypted = fernet.encrypt(cvv.encode()).decode()
+    
+    def decrypt_card_number(self):
+        """Decrypt card number (use with caution)"""
+        if not hasattr(settings, 'ENCRYPTION_KEY'):
+            return None
+        
+        fernet = Fernet(settings.ENCRYPTION_KEY)
+        try:
+            return fernet.decrypt(self.card_number_encrypted.encode()).decode()
+        except:
+            return None
+    
+    def decrypt_cvv(self):
+        """Decrypt CVV (use with caution)"""
+        if not hasattr(settings, 'ENCRYPTION_KEY'):
+            return None
+        
+        fernet = Fernet(settings.ENCRYPTION_KEY)
+        try:
+            return fernet.decrypt(self.cvv_encrypted.encode()).decode()
+        except:
+            return None
+    
+    def mask_card_number(self, card_number):
+        """Mask card number for display"""
+        if len(card_number) >= 4:
+            return f"**** **** **** {card_number[-4:]}"
+        return "**** **** **** ****"
+    
+    def get_last_four_digits(self, card_number):
+        """Extract last 4 digits"""
+        return card_number[-4:] if len(card_number) >= 4 else ""
+    
+    def detect_card_type(self, card_number):
+        """Detect card type based on number"""
+        card_number = card_number.replace(' ', '').replace('-', '')
+        
+        if card_number.startswith('4'):
+            return 'visa', 'Visa'
+        elif card_number.startswith('5'):
+            return 'mastercard', 'Mastercard'
+        elif card_number.startswith('34') or card_number.startswith('37'):
+            return 'amex', 'American Express'
+        elif card_number.startswith('6'):
+            return 'discover', 'Discover'
+        else:
+            return 'other', 'Other'
+    
+    def validate_card_number(self, card_number):
+        """Validate card number using Luhn algorithm"""
+        card_number = card_number.replace(' ', '').replace('-', '')
+        
+        if not card_number.isdigit():
+            return False
+        
+        # Luhn algorithm
+        digits = [int(d) for d in card_number]
+        odd_digits = digits[-1::-2]
+        even_digits = digits[-2::-2]
+        
+        checksum = sum(odd_digits)
+        for d in even_digits:
+            checksum += sum(divmod(d * 2, 10))
+        
+        return checksum % 10 == 0
+    
+    def validate_expiry_date(self, month, year):
+        """Validate expiry date"""
+        from django.utils import timezone
+        current_date = timezone.now()
+        
+        if year < current_date.year:
+            return False
+        elif year == current_date.year and month < current_date.month:
+            return False
+        
+        return True
+    
+    def validate_cvv(self, cvv):
+        """Validate CVV"""
+        if not cvv.isdigit():
+            return False
+        
+        if self.card_type in ['visa', 'mastercard', 'discover']:
+            return len(cvv) == 3
+        elif self.card_type == 'amex':
+            return len(cvv) == 4
+        
+        return len(cvv) in [3, 4]
+    
+    def is_locked(self):
+        """Check if card is locked"""
+        if self.locked_until and self.locked_until > timezone.now():
+            return True
+        return False
+    
+    def can_fund(self, amount):
+        """Check if card can be used for funding"""
+        if self.is_locked():
+            return False
+        
+        if amount > self.daily_limit:
+            return False
+        
+        # Check monthly limit
+        from django.utils import timezone
+        from datetime import timedelta
+        month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        monthly_usage = self.user.transactions.filter(
+            transaction_type='card_funding',
+            created_at__gte=month_start,
+            status='completed'
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        if monthly_usage + amount > self.monthly_limit:
+            return False
+        
+        return True
+    
+    def can_withdraw(self, amount):
+        """Check if card can be used for withdrawal"""
+        if self.is_locked():
+            return False
+        
+        # Check if user has sufficient balance
+        user_balance = self.user.account.account_balance
+        return user_balance >= amount
+    
+    class Meta:
+        verbose_name = 'Credit Card'
+        verbose_name_plural = 'Credit Cards'
+        ordering = ['-created_at']
