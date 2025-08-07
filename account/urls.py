@@ -25,5 +25,6 @@ urlpatterns = [
     
     # Notifications
     path('notifications/', views.notifications_view, name='notifications'),
+    path('notifications/count/', views.notification_count_view, name='notification_count'),
     path('notification/<int:notification_id>/read/', views.mark_notification_read_view, name='mark_notification_read'),
 ] 

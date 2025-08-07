@@ -491,6 +491,38 @@ def mark_notification_read_view(request, notification_id):
     return redirect('account:notifications')
 
 
+@login_required
+def notification_count_view(request):
+    """Get notification count for real-time updates"""
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        unread_count = Notification.objects.filter(
+            user=request.user, 
+            status='unread'
+        ).count()
+        
+        # Get latest notification for toast
+        latest_notification = None
+        if unread_count > 0:
+            latest = Notification.objects.filter(
+                user=request.user,
+                status='unread'
+            ).order_by('-created_at').first()
+            
+            if latest:
+                latest_notification = {
+                    'title': latest.title,
+                    'message': latest.message,
+                    'type': latest.notification_type
+                }
+        
+        return JsonResponse({
+            'count': unread_count,
+            'latest_notification': latest_notification
+        })
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
 # Utility Views
 def export_transactions_csv(request, transactions):
     """Export transactions to CSV"""

@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Notification Settings - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Notification Settings
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-bell me-2"></i>
+                                    Notification Types
+                                </h5>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="transaction_notifications" name="transaction_notifications" checked>
+                                    <label class="form-check-label" for="transaction_notifications">
+                                        <i class="fas fa-exchange-alt text-primary me-2"></i>
+                                        Transaction Notifications
+                                    </label>
+                                    <small class="form-text text-muted d-block">Get notified about money transfers and payments</small>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="payment_request_notifications" name="payment_request_notifications" checked>
+                                    <label class="form-check-label" for="payment_request_notifications">
+                                        <i class="fas fa-hand-holding-usd text-info me-2"></i>
+                                        Payment Request Notifications
+                                    </label>
+                                    <small class="form-text text-muted d-block">Get notified when someone requests money from you</small>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="kyc_notifications" name="kyc_notifications" checked>
+                                    <label class="form-check-label" for="kyc_notifications">
+                                        <i class="fas fa-id-card text-warning me-2"></i>
+                                        KYC Notifications
+                                    </label>
+                                    <small class="form-text text-muted d-block">Get notified about KYC status updates</small>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="security_notifications" name="security_notifications" checked>
+                                    <label class="form-check-label" for="security_notifications">
+                                        <i class="fas fa-shield-alt text-danger me-2"></i>
+                                        Security Notifications
+                                    </label>
+                                    <small class="form-text text-muted d-block">Get notified about security events and account activity</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-volume-up me-2"></i>
+                                    Notification Preferences
+                                </h5>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="sound_notifications" name="sound_notifications" checked>
+                                    <label class="form-check-label" for="sound_notifications">
+                                        <i class="fas fa-volume-up text-success me-2"></i>
+                                        Sound Notifications
+                                    </label>
+                                    <small class="form-text text-muted d-block">Play sound when new notifications arrive</small>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="toast_notifications" name="toast_notifications" checked>
+                                    <label class="form-check-label" for="toast_notifications">
+                                        <i class="fas fa-comment-dots text-info me-2"></i>
+                                        Toast Notifications
+                                    </label>
+                                    <small class="form-text text-muted d-block">Show popup notifications on screen</small>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications">
+                                    <label class="form-check-label" for="email_notifications">
+                                        <i class="fas fa-envelope text-warning me-2"></i>
+                                        Email Notifications
+                                    </label>
+                                    <small class="form-text text-muted d-block">Send notifications to your email address</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="notification_frequency" class="form-label">
+                                        <i class="fas fa-clock me-2"></i>
+                                        Update Frequency
+                                    </label>
+                                    <select class="form-select" id="notification_frequency" name="notification_frequency">
+                                        <option value="15">Every 15 seconds</option>
+                                        <option value="30" selected>Every 30 seconds</option>
+                                        <option value="60">Every minute</option>
+                                        <option value="300">Every 5 minutes</option>
+                                    </select>
+                                    <small class="form-text text-muted">How often to check for new notifications</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'account:notifications' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Notifications
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Notification Test Section -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-flask me-2"></i>
+                        Test Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Test your notification settings to make sure everything is working correctly.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="testNotification('transaction')">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                Test Transaction
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button type="button" class="btn btn-outline-info w-100" onclick="testNotification('payment_request')">
+                                <i class="fas fa-hand-holding-usd me-2"></i>
+                                Test Payment Request
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button type="button" class="btn btn-outline-warning w-100" onclick="testNotification('kyc')">
+                                <i class="fas fa-id-card me-2"></i>
+                                Test KYC
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button type="button" class="btn btn-outline-danger w-100" onclick="testNotification('security')">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Test Security
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testNotification(type) {
+    const notifications = {
+        'transaction': {
+            title: 'Test Transaction Notification',
+            message: 'This is a test transaction notification to verify your settings.',
+            type: 'transaction'
+        },
+        'payment_request': {
+            title: 'Test Payment Request Notification',
+            message: 'This is a test payment request notification to verify your settings.',
+            type: 'payment_request'
+        },
+        'kyc': {
+            title: 'Test KYC Notification',
+            message: 'This is a test KYC notification to verify your settings.',
+            type: 'kyc'
+        },
+        'security': {
+            title: 'Test Security Notification',
+            message: 'This is a test security notification to verify your settings.',
+            type: 'security'
+        }
+    };
+    
+    const notification = notifications[type];
+    if (notification) {
+        showNotificationToast(notification);
+        
+        // Play notification sound if enabled
+        const soundEnabled = document.getElementById('sound_notifications').checked;
+        if (soundEnabled) {
+            playNotificationSound();
+        }
+    }
+}
+
+function playNotificationSound() {
+    // Create a simple notification sound
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+}
+</script>
+{% endblock %}
