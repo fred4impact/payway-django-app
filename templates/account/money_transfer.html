@@ -5,16 +5,16 @@
 
 {% block content %}
 <div class="container-fluid px-4 py-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <!-- Page Header (Aligned with form) -->
+            <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
-                    <h1 class="h3 mb-1 text-dark fw-bold">
+                    <h1 class="h3 mb-2 text-dark fw-bold">
                         <i class="fas fa-paper-plane me-2 text-primary"></i>
                         Send Money
                     </h1>
-                    <p class="text-muted mb-0">Transfer money to friends, family, or businesses securely</p>
+                    <p class="text-muted mb-0 fs-6">Transfer money to friends, family, or businesses securely</p>
                 </div>
                 <div>
                     <a href="{% url 'account:transactions' %}" class="btn btn-outline-secondary">
@@ -23,11 +23,7 @@
                     </a>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-xl-8 col-lg-10">
+            
             <!-- Progress Steps -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">

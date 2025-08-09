@@ -95,8 +95,8 @@ def search_account_view(request):
             pass
         
         # Search by email
-        try:
-            user = User.objects.get(email__icontains=query)
+        users = User.objects.filter(email__icontains=query)
+        for user in users:
             if user != request.user:
                 try:
                     account = Account.objects.get(user=user, is_active=True)
@@ -107,8 +107,6 @@ def search_account_view(request):
                     })
                 except Account.DoesNotExist:
                     pass
-        except User.DoesNotExist:
-            pass
     
     context = {
         'form': form,

@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Setup Two-Factor Authentication - PayWay{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-step {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .setup-step h2 {
+        color: white;
+        margin-bottom: 1rem;
+    }
+    
+    .method-card {
+        border: 2px solid #e9ecef;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .method-card:hover {
+        border-color: #007bff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+    }
+    
+    .method-card.selected {
+        border-color: #007bff;
+        background-color: #f8f9ff;
+    }
+    
+    .method-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #007bff;
+    }
+    
+    .method-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .method-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .security-benefits {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .security-benefits h4 {
+        color: white;
+        margin-bottom: 1rem;
+    }
+    
+    .benefit-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .benefit-item i {
+        margin-right: 0.5rem;
+        color: #90EE90;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-shield-alt text-primary"></i>
+            Setup Two-Factor Authentication
+        </h1>
+        <a href="{% url 'userauths:security_dashboard' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Security Dashboard
+        </a>
+    </div>
+
+    <!-- Setup Steps -->
+    <div class="setup-step">
+        <h2><i class="fas fa-lock"></i> Enhanced Security Setup</h2>
+        <p class="mb-0">Protect your account with an additional layer of security</p>
+    </div>
+
+    <!-- Security Benefits -->
+    <div class="security-benefits">
+        <h4><i class="fas fa-shield-alt"></i> Why Enable Two-Factor Authentication?</h4>
+        <div class="benefit-item">
+            <i class="fas fa-check-circle"></i>
+            <span>Protects your account even if your password is compromised</span>
+        </div>
+        <div class="benefit-item">
+            <i class="fas fa-check-circle"></i>
+            <span>Required by many financial institutions and security standards</span>
+        </div>
+        <div class="benefit-item">
+            <i class="fas fa-check-circle"></i>
+            <span>Provides real-time alerts for suspicious login attempts</span>
+        </div>
+        <div class="benefit-item">
+            <i class="fas fa-check-circle"></i>
+            <span>Gives you peace of mind knowing your account is secure</span>
+        </div>
+    </div>
+
+    <!-- Setup Form -->
+    <div class="form-section">
+        <h4 class="mb-3">
+            <i class="fas fa-cog text-primary"></i>
+            Choose Your 2FA Method
+        </h4>
+        
+        <form method="post" id="2faSetupForm">
+            {% csrf_token %}
+            
+            <!-- Method Selection -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="method-card" data-method="totp">
+                        <div class="method-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="method-title">Authenticator App (Recommended)</div>
+                        <div class="method-description">
+                            Use apps like Google Authenticator, Authy, or Microsoft Authenticator. 
+                            Works offline and provides time-based codes.
+                        </div>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="radio" name="method" id="method_totp" value="totp" checked>
+                            <label class="form-check-label" for="method_totp">
+                                Select this method
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="method-card" data-method="sms">
+                        <div class="method-icon">
+                            <i class="fas fa-sms"></i>
+                        </div>
+                        <div class="method-title">SMS Text Messages</div>
+                        <div class="method-description">
+                            Receive verification codes via text message. 
+                            Requires a valid phone number and cellular service.
+                        </div>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="radio" name="method" id="method_sms" value="sms">
+                            <label class="form-check-label" for="method_sms">
+                                Select this method
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phone Number Section (for SMS) -->
+            <div id="phoneSection" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="phone_number" class="form-label">
+                                <i class="fas fa-phone text-primary"></i>
+                                Phone Number
+                            </label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="phone_number" 
+                                   name="phone_number" 
+                                   placeholder="+1 (555) 123-4567"
+                                   pattern="[\+]?[0-9\s\-\(\)]+">
+                            <small class="form-text text-muted">
+                                Enter the phone number where you want to receive SMS codes
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="confirm_phone" class="form-label">
+                                <i class="fas fa-phone text-primary"></i>
+                                Confirm Phone Number
+                            </label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="confirm_phone" 
+                                   name="confirm_phone" 
+                                   placeholder="+1 (555) 123-4567"
+                                   pattern="[\+]?[0-9\s\-\(\)]+">
+                            <small class="form-text text-muted">
+                                Re-enter the phone number to confirm
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="agree_terms" required>
+                <label class="form-check-label" for="agree_terms">
+                    I understand that enabling Two-Factor Authentication will require me to enter a verification code every time I log in from a new device or browser.
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg" id="setupButton">
+                    <i class="fas fa-shield-alt"></i>
+                    Continue Setup
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Security Tips -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-lightbulb text-warning"></i>
+                Security Tips
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-mobile-alt text-primary"></i> For Authenticator Apps:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Keep your phone secure and password-protected</li>
+                        <li><i class="fas fa-check text-success"></i> Don't share screenshots of your authenticator app</li>
+                        <li><i class="fas fa-check text-success"></i> Consider using a dedicated device for 2FA</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-sms text-primary"></i> For SMS 2FA:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Ensure your phone number is current and secure</li>
+                        <li><i class="fas fa-check text-success"></i> Be aware of SIM swapping attacks</li>
+                        <li><i class="fas fa-check text-success"></i> Have a backup phone number if possible</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Method selection handling
+        $('.method-card').click(function() {
+            $('.method-card').removeClass('selected');
+            $(this).addClass('selected');
+            
+            const method = $(this).data('method');
+            $(`input[name="method"][value="${method}"]`).prop('checked', true);
+            
+            // Show/hide phone number section
+            if (method === 'sms') {
+                $('#phoneSection').show();
+                $('#phone_number, #confirm_phone').prop('required', true);
+            } else {
+                $('#phoneSection').hide();
+                $('#phone_number, #confirm_phone').prop('required', false);
+            }
+        });
+        
+        // Form validation
+        $('#2faSetupForm').submit(function(e) {
+            const method = $('input[name="method"]:checked').val();
+            
+            if (method === 'sms') {
+                const phone = $('#phone_number').val();
+                const confirmPhone = $('#confirm_phone').val();
+                
+                if (!phone || !confirmPhone) {
+                    e.preventDefault();
+                    alert('Please enter and confirm your phone number for SMS 2FA.');
+                    return false;
+                }
+                
+                if (phone !== confirmPhone) {
+                    e.preventDefault();
+                    alert('Phone numbers do not match. Please check and try again.');
+                    return false;
+                }
+            }
+            
+            if (!$('#agree_terms').is(':checked')) {
+                e.preventDefault();
+                alert('Please agree to the terms and conditions to continue.');
+                return false;
+            }
+            
+            // Disable button to prevent double submission
+            $('#setupButton').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Setting up...');
+        });
+        
+        // Phone number formatting
+        $('#phone_number, #confirm_phone').on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 3) {
+                    value = `(${value}`;
+                } else if (value.length <= 6) {
+                    value = `(${value.slice(0,3)}) ${value.slice(3)}`;
+                } else {
+                    value = `(${value.slice(0,3)}) ${value.slice(3,6)}-${value.slice(6,10)}`;
+                }
+            }
+            $(this).val(value);
+        });
+        
+        // Initialize first method as selected
+        $('.method-card:first').click();
+    });
+</script>
+{% endblock %}

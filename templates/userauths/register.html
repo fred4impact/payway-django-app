@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 
 {% block title %}Create your account - PayWay{% endblock %}
 
@@ -30,15 +29,58 @@
                             </div>
                         </div>
                         
+                        <!-- Error Messages -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Please correct the following errors:</strong>
+                                <ul class="mb-0 mt-2">
+                                    {% for field, errors in form.errors.items %}
+                                        {% if field != '__all__' %}
+                                            {% for error in errors %}
+                                                <li>{{ field|title }}: {{ error }}</li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
                         <!-- Registration Form -->
-                        <form method="post" novalidate>
+                        <form method="post" novalidate id="registrationForm">
                             {% csrf_token %}
+                            
+                            <!-- Username Field -->
+                            <div class="mb-3">
+                                <label for="{{ form.username.id_for_label }}" class="form-label fw-bold text-dark">
+                                    Username
+                                </label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       id="{{ form.username.id_for_label }}" 
+                                       name="{{ form.username.name }}" 
+                                       placeholder="Choose a username"
+                                       required>
+                                {% if form.username.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.username.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Choose a unique username (letters, numbers, and underscores only).
+                                    </small>
+                                </div>
+                            </div>
                             
                             <!-- Full Name Fields -->
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="first_name" class="form-label fw-bold text-dark">
-                                        Full name
+                                        First name
                                     </label>
                                     <input type="text" class="form-control form-control-lg" 
                                            id="first_name" 
@@ -51,7 +93,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="last_name" class="form-label fw-bold text-dark">
-                                        &nbsp;
+                                        Last name
                                     </label>
                                     <input type="text" class="form-control form-control-lg" 
                                            id="last_name" 
@@ -81,6 +123,37 @@
                                 {% endif %}
                             </div>
                             
+                            <!-- Phone Number Field (Optional) -->
+                            <div class="mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-bold text-dark">
+                                    Phone number <span class="text-muted">(optional)</span>
+                                </label>
+                                <input type="tel" class="form-control form-control-lg" 
+                                       id="{{ form.phone_number.id_for_label }}" 
+                                       name="{{ form.phone_number.name }}" 
+                                       placeholder="Enter your phone number">
+                                {% if form.phone_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.phone_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Date of Birth Field (Optional) -->
+                            <div class="mb-3">
+                                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label fw-bold text-dark">
+                                    Date of birth <span class="text-muted">(optional)</span>
+                                </label>
+                                <input type="date" class="form-control form-control-lg" 
+                                       id="{{ form.date_of_birth.id_for_label }}" 
+                                       name="{{ form.date_of_birth.name }}">
+                                {% if form.date_of_birth.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.date_of_birth.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
                             <!-- Password Field -->
                             <div class="mb-3">
                                 <label for="{{ form.password1.id_for_label }}" class="form-label fw-bold text-dark">
@@ -98,9 +171,17 @@
                                 </div>
                                 {% if form.password1.errors %}
                                     <div class="invalid-feedback d-block">
-                                        Your password is invalid. Please try again.
+                                        {% for error in form.password1.errors %}
+                                            {{ error }}
+                                        {% endfor %}
                                     </div>
                                 {% endif %}
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Password must be at least 8 characters and not too similar to your username.
+                                    </small>
+                                </div>
                             </div>
                             
                             <!-- Confirm Password Field -->
@@ -120,7 +201,9 @@
                                 </div>
                                 {% if form.password2.errors %}
                                     <div class="invalid-feedback d-block">
-                                        Password does not match the confirm password.
+                                        {% for error in form.password2.errors %}
+                                            {{ error }}
+                                        {% endfor %}
                                     </div>
                                 {% endif %}
                             </div>
@@ -303,25 +386,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Form validation styling
-    const form = document.querySelector('form');
-    const inputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
-    
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            if (this.value.trim() === '') {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
+    // Form validation styling - simplified to avoid conflicts
+    const form = document.querySelector('#registrationForm');
+    if (form) {
+        // Debug form submission
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted!');
+            console.log('Form data:', new FormData(form));
+            
+            // Remove any existing validation classes
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+            
+            // Check if required fields are filled
+            const requiredInputs = form.querySelectorAll('input[required]');
+            let isValid = true;
+            
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    console.log('Missing required field:', input.name);
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                console.log('Form validation failed');
+                return false;
             }
+            
+            console.log('Form validation passed, submitting...');
         });
-        
-        input.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid') && this.value.trim() !== '') {
-                this.classList.remove('is-invalid');
-            }
-        });
-    });
+    }
     
     // Add smooth transitions for trust indicators
     const trustIcons = document.querySelectorAll('.trust-indicators .bg-white');
