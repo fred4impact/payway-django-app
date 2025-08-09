@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # Django Application
+  web:
+    build: .
+    container_name: payway-web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=payway.settings
+      - DATABASE_URL=postgresql://payway_user:payway_password@db:5432/payway_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - payway-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: payway-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=payway_db
+      - POSTGRES_USER=payway_user
+      - POSTGRES_PASSWORD=payway_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - payway-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payway_user -d payway_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: payway-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - payway-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Nginx for static files and reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: payway-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web
+    networks:
+      - payway-network
+
+  # Celery worker for background tasks (optional)
+  celery:
+    build: .
+    container_name: payway-celery
+    restart: unless-stopped
+    command: celery -A payway worker --loglevel=info
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=payway.settings
+      - DATABASE_URL=postgresql://payway_user:payway_password@db:5432/payway_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - payway-network
+
+  # Celery beat for scheduled tasks (optional)
+  celery-beat:
+    build: .
+    container_name: payway-celery-beat
+    restart: unless-stopped
+    command: celery -A payway beat --loglevel=info
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=payway.settings
+      - DATABASE_URL=postgresql://payway_user:payway_password@db:5432/payway_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - payway-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+
+networks:
+  payway-network:
+    driver: bridge

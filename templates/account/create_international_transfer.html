@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create International Transfer - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-globe me-2"></i>
+                        Create International Transfer
+                    </h4>
+                    <p class="mb-0">Send money internationally using SWIFT/BIC codes</p>
+                </div>
+                <div class="card-body">
+                    <!-- Current Balance -->
+                    <div class="alert alert-info">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">Available Balance</h6>
+                                <h3 class="text-success mb-0">${{ user.account.account_balance|floatformat:2 }}</h3>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <small class="text-muted">Account: {{ user.account.account_number }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transfer Form -->
+                    <form method="post" id="transfer-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Amount and Currency -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                        <i class="fas fa-dollar-sign me-2"></i>
+                                        Transfer Amount
+                                    </label>
+                                    {{ form.amount }}
+                                    {% if form.amount.errors %}
+                                        <div class="text-danger small">{{ form.amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.currency.id_for_label }}" class="form-label">
+                                        <i class="fas fa-exchange-alt me-2"></i>
+                                        Currency
+                                    </label>
+                                    {{ form.currency }}
+                                    {% if form.currency.errors %}
+                                        <div class="text-danger small">{{ form.currency.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SWIFT Code -->
+                        <div class="mb-3">
+                            <label for="{{ form.swift_code.id_for_label }}" class="form-label">
+                                <i class="fas fa-university me-2"></i>
+                                Recipient Bank SWIFT/BIC Code
+                            </label>
+                            <div class="input-group">
+                                {{ form.swift_code }}
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#swiftSearchModal">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            {% if form.swift_code.errors %}
+                                <div class="text-danger small">{{ form.swift_code.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">{{ form.swift_code.help_text }}</small>
+                        </div>
+
+                        <!-- Bank Information Preview -->
+                        <div id="bank-info" class="alert alert-success" style="display: none;">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Bank Found
+                            </h6>
+                            <div id="bank-details"></div>
+                        </div>
+
+                        <!-- Recipient Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.recipient_name.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user me-2"></i>
+                                        Recipient Name
+                                    </label>
+                                    {{ form.recipient_name }}
+                                    {% if form.recipient_name.errors %}
+                                        <div class="text-danger small">{{ form.recipient_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.recipient_account_number.id_for_label }}" class="form-label">
+                                        <i class="fas fa-credit-card me-2"></i>
+                                        Account Number
+                                    </label>
+                                    {{ form.recipient_account_number }}
+                                    {% if form.recipient_account_number.errors %}
+                                        <div class="text-danger small">{{ form.recipient_account_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.recipient_country.id_for_label }}" class="form-label">
+                                        <i class="fas fa-flag me-2"></i>
+                                        Country
+                                    </label>
+                                    {{ form.recipient_country }}
+                                    {% if form.recipient_country.errors %}
+                                        <div class="text-danger small">{{ form.recipient_country.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.recipient_city.id_for_label }}" class="form-label">
+                                        <i class="fas fa-city me-2"></i>
+                                        City
+                                    </label>
+                                    {{ form.recipient_city }}
+                                    {% if form.recipient_city.errors %}
+                                        <div class="text-danger small">{{ form.recipient_city.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-comment me-2"></i>
+                                Description (Optional)
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Transfer Summary -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-calculator me-2"></i>
+                                    Transfer Summary
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Transfer Amount</small><br>
+                                        <strong id="summary-amount">$0.00</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Transfer Fee</small><br>
+                                        <strong id="summary-fee" class="text-warning">$0.00</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Total Amount</small><br>
+                                        <strong id="summary-total" class="text-success">$0.00</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted">Processing Time</small><br>
+                                        <strong>1-3 Business Days</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'account:international_transfers' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Send Transfer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        International Transfer Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                                <h6>Processing Time</h6>
+                                <small class="text-muted">1-3 business days</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-shield-alt fa-2x text-info mb-2"></i>
+                                <h6>Secure Transfer</h6>
+                                <small class="text-muted">SWIFT network security</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-globe fa-2x text-info mb-2"></i>
+                                <h6>Global Coverage</h6>
+                                <small class="text-muted">200+ countries supported</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SWIFT Search Modal -->
+<div class="modal fade" id="swiftSearchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-search me-2"></i>
+                    Search SWIFT Codes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="swift-search" class="form-control" placeholder="Search by bank name, country, or SWIFT code...">
+                </div>
+                <div id="swift-results" class="list-group">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+    const currencySelect = document.getElementById('{{ form.currency.id_for_label }}');
+    const swiftInput = document.getElementById('{{ form.swift_code.id_for_label }}');
+    const bankInfo = document.getElementById('bank-info');
+    const bankDetails = document.getElementById('bank-details');
+    
+    // Update summary when amount or currency changes
+    function updateSummary() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const currencyCode = currencySelect.value;
+        
+        // Calculate fee (simplified for demo)
+        let fee = 0;
+        if (amount > 0) {
+            if (currencyCode === 'USD') {
+                fee = Math.max(5, Math.min(amount * 0.02, 50));
+            } else if (currencyCode === 'EUR') {
+                fee = Math.max(5, Math.min(amount * 0.025, 60));
+            } else if (currencyCode === 'GBP') {
+                fee = Math.max(5, Math.min(amount * 0.03, 75));
+            } else {
+                fee = Math.max(5, Math.min(amount * 0.025, 50));
+            }
+        }
+        
+        const total = amount + fee;
+        
+        document.getElementById('summary-amount').textContent = `$${amount.toFixed(2)}`;
+        document.getElementById('summary-fee').textContent = `$${fee.toFixed(2)}`;
+        document.getElementById('summary-total').textContent = `$${total.toFixed(2)}`;
+    }
+    
+    amountInput.addEventListener('input', updateSummary);
+    currencySelect.addEventListener('change', updateSummary);
+    
+    // SWIFT code validation
+    swiftInput.addEventListener('blur', function() {
+        const swiftCode = this.value.trim().toUpperCase();
+        if (swiftCode.length >= 8) {
+            // Simulate bank lookup (in real app, this would be an AJAX call)
+            if (swiftCode.startsWith('CHAS') || swiftCode.startsWith('BOFA') || swiftCode.startsWith('WELLS')) {
+                bankInfo.style.display = 'block';
+                bankDetails.innerHTML = `
+                    <strong>Bank Found:</strong> ${swiftCode}<br>
+                    <small class="text-muted">Valid SWIFT code detected</small>
+                `;
+            } else {
+                bankInfo.style.display = 'none';
+            }
+        }
+    });
+    
+    // Initialize summary
+    updateSummary();
+});
+</script>
+{% endblock %}

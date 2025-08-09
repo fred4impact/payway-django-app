@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Security Dashboard - PayWay{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --security-primary: #dc3545;
+        --security-secondary: #6c757d;
+        --security-success: #198754;
+        --security-warning: #ffc107;
+        --security-info: #0dcaf0;
+        --security-light: #f8f9fa;
+        --security-dark: #212529;
+    }
+
+    .security-header {
+        background: linear-gradient(135deg, var(--security-primary) 0%, #c82333 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0.5rem;
+    }
+
+    .security-score-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .security-score {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .security-score.excellent { color: var(--security-success); }
+    .security-score.good { color: var(--security-warning); }
+    .security-score.poor { color: var(--security-primary); }
+
+    .security-status {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-excellent { background: rgba(25, 135, 84, 0.1); color: var(--security-success); }
+    .status-good { background: rgba(255, 193, 7, 0.1); color: var(--security-warning); }
+    .status-poor { background: rgba(220, 53, 69, 0.1); color: var(--security-primary); }
+
+    .security-section {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--security-light);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--security-dark);
+        margin: 0;
+    }
+
+    .security-alert {
+        background: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        color: var(--security-primary);
+    }
+
+    .device-card {
+        background: var(--security-light);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--security-info);
+    }
+
+    .device-card.trusted {
+        border-left-color: var(--security-success);
+    }
+
+    .device-card.suspicious {
+        border-left-color: var(--security-warning);
+    }
+
+    .device-card.blocked {
+        border-left-color: var(--security-primary);
+    }
+
+    .event-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--security-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .event-item:last-child {
+        border-bottom: none;
+    }
+
+    .event-icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 0.875rem;
+    }
+
+    .event-icon.success { background: rgba(25, 135, 84, 0.1); color: var(--security-success); }
+    .event-icon.warning { background: rgba(255, 193, 7, 0.1); color: var(--security-warning); }
+    .event-icon.danger { background: rgba(220, 53, 69, 0.1); color: var(--security-primary); }
+    .event-icon.info { background: rgba(13, 202, 240, 0.1); color: var(--security-info); }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .action-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .action-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--security-primary);
+    }
+
+    .risk-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .risk-low { background: rgba(25, 135, 84, 0.1); color: var(--security-success); }
+    .risk-medium { background: rgba(255, 193, 7, 0.1); color: var(--security-warning); }
+    .risk-high { background: rgba(220, 53, 69, 0.1); color: var(--security-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Security Header -->
+    <div class="security-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1>
+                    <i class="fas fa-shield-alt me-3"></i>
+                    Security Dashboard
+                </h1>
+                <p class="mb-0">Monitor and manage your account security</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <span class="security-status status-{{ security_summary.security_score|floatformat:0|add:"-1"|divisibleby:50|yesno:"excellent,good,poor" }}">
+                    {% if security_summary.security_score >= 80 %}
+                        Excellent
+                    {% elif security_summary.security_score >= 50 %}
+                        Good
+                    {% else %}
+                        Poor
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Score Card -->
+    <div class="security-score-card">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="security-score security-score-{{ security_summary.security_score|floatformat:0|add:"-1"|divisibleby:50|yesno:"excellent,good,poor" }}">
+                    {{ security_summary.security_score }}
+                </div>
+                <h3>Security Score</h3>
+                <p class="text-muted mb-0">
+                    {% if security_summary.security_score >= 80 %}
+                        Your account is highly secure! Keep up the good work.
+                    {% elif security_summary.security_score >= 50 %}
+                        Your account has good security. Consider enabling 2FA for better protection.
+                    {% else %}
+                        Your account needs attention. Review the recommendations below.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h4 mb-1">{{ security_summary.active_devices.count }}</div>
+                        <small class="text-muted">Active Devices</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 mb-1">{{ security_summary.recent_events.count }}</div>
+                        <small class="text-muted">Recent Events</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Alerts -->
+    {% if security_summary.is_locked %}
+    <div class="security-alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Account Locked:</strong> Your account is temporarily locked due to multiple failed login attempts. 
+        It will be unlocked automatically at {{ security_summary.account_locked_until|date:"F j, Y, g:i a" }}.
+    </div>
+    {% endif %}
+
+    {% if security_summary.failed_login_attempts > 0 %}
+    <div class="security-alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Failed Login Attempts:</strong> You have {{ security_summary.failed_login_attempts }} failed login attempts. 
+        After {{ security_summary.failed_login_attempts|add:"-1"|divisibleby:2|yesno:"3,5,10" }} more attempts, your account will be locked.
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Recent Security Events -->
+        <div class="col-lg-8">
+            <div class="security-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-history me-2"></i>
+                        Recent Security Events
+                    </h3>
+                    <a href="{% url 'userauths:security_logs' %}" class="btn btn-outline-primary btn-sm">
+                        View All
+                    </a>
+                </div>
+                
+                {% if security_summary.recent_events %}
+                    {% for event in security_summary.recent_events %}
+                    <div class="event-item">
+                        <div class="d-flex align-items-center">
+                            <div class="event-icon 
+                                {% if event.event_type == 'login_success' %}success
+                                {% elif event.event_type == 'login_failed' or event.event_type == 'account_locked' %}danger
+                                {% elif event.risk_score >= 50 %}warning
+                                {% else %}info{% endif %}">
+                                <i class="fas 
+                                    {% if event.event_type == 'login_success' %}fa-check
+                                    {% elif event.event_type == 'login_failed' %}fa-times
+                                    {% elif event.event_type == 'account_locked' %}fa-lock
+                                    {% elif event.event_type == 'logout' %}fa-sign-out-alt
+                                    {% else %}fa-info{% endif %}"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ event.get_event_type_display }}</div>
+                                <small class="text-muted">
+                                    {{ event.ip_address }} • {{ event.location }} • {{ event.timestamp|timesince }} ago
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="risk-badge risk-{{ event.risk_score|floatformat:0|add:"-1"|divisibleby:30|yesno:"low,medium,high" }}">
+                                Risk: {{ event.risk_score }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">No recent security events.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Active Devices -->
+        <div class="col-lg-4">
+            <div class="security-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        Active Devices
+                    </h3>
+                    <a href="{% url 'userauths:device_management' %}" class="btn btn-outline-primary btn-sm">
+                        Manage
+                    </a>
+                </div>
+                
+                {% if security_summary.active_devices %}
+                    {% for device in security_summary.active_devices %}
+                    <div class="device-card device-card-{{ device.is_trusted|yesno:"trusted,suspicious" }}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-bold">{{ device.device_name }}</div>
+                                <small class="text-muted">{{ device.browser }} on {{ device.operating_system }}</small>
+                            </div>
+                            <span class="badge {% if device.is_trusted %}bg-success{% else %}bg-warning{% endif %}">
+                                {% if device.is_trusted %}Trusted{% else %}New{% endif %}
+                            </span>
+                        </div>
+                        <div class="small text-muted">
+                            <div>{{ device.ip_address }} • {{ device.location }}</div>
+                            <div>Last used: {{ device.last_used|timesince }} ago</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">No active devices found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{% url 'userauths:device_management' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h5>Device Management</h5>
+            <p class="text-muted mb-0">View and manage your trusted devices</p>
+        </a>
+        
+        <a href="{% url 'userauths:security_logs' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-list-alt"></i>
+            </div>
+            <h5>Security Logs</h5>
+            <p class="text-muted mb-0">Review your security activity history</p>
+        </a>
+        
+        <a href="#" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-key"></i>
+            </div>
+            <h5>Two-Factor Auth</h5>
+            <p class="text-muted mb-0">Enable 2FA for enhanced security</p>
+        </a>
+        
+        <a href="#" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-user-lock"></i>
+            </div>
+            <h5>Password Change</h5>
+            <p class="text-muted mb-0">Update your password regularly</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

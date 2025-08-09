@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}PayWay - Digital Payment Platform{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.svg' %}">
+    <link rel="shortcut icon" href="{% static 'images/favicon.svg' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/favicon.svg' %}">
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -14,103 +22,78 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="bg-light modern-dashboard">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'core:home' %}">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm position-relative">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
                 <i class="fas fa-wallet me-2"></i>PayWay
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:home' %}">Home</a>
+                        <a class="nav-link" href="{% url 'core:home' %}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
+                            <a class="nav-link" href="{% url 'core:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                            </a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-money-bill-wave me-2"></i>Payments
+                                <i class="fas fa-money-bill-wave me-1"></i>Payments
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><h6 class="dropdown-header fw-bold text-dark">Money Transfer</h6></li>
                                 <li><a class="dropdown-item" href="{% url 'account:money_transfer' %}">
-                                    <i class="fas fa-paper-plane me-2"></i>Send Money
+                                    <i class="fas fa-paper-plane me-2 text-primary"></i>Send Money
                                 </a></li>
                                 <li><a class="dropdown-item" href="{% url 'account:create_payment_request' %}">
-                                    <i class="fas fa-hand-holding-usd me-2"></i>Request Money
+                                    <i class="fas fa-hand-holding-usd me-2 text-info"></i>Request Money
                                 </a></li>
                                 <li><a class="dropdown-item" href="{% url 'account:search_account' %}">
-                                    <i class="fas fa-search me-2"></i>Find Account
+                                    <i class="fas fa-search me-2 text-success"></i>Find Account
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header fw-bold text-dark">International</h6></li>
+                                <li><a class="dropdown-item" href="{% url 'account:international_transfers' %}">
+                                    <i class="fas fa-globe me-2 text-warning"></i>International Transfers
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header fw-bold text-dark">History & Cards</h6></li>
                                 <li><a class="dropdown-item" href="{% url 'account:transactions' %}">
-                                    <i class="fas fa-history me-2"></i>Transaction History
+                                    <i class="fas fa-history me-2 text-secondary"></i>Transaction History
                                 </a></li>
                                 <li><a class="dropdown-item" href="{% url 'account:payment_requests' %}">
-                                    <i class="fas fa-list me-2"></i>Payment Requests
+                                    <i class="fas fa-list me-2 text-info"></i>Payment Requests
                                 </a></li>
                                 <li><a class="dropdown-item" href="{% url 'account:credit_cards' %}">
-                                    <i class="fas fa-credit-card me-2"></i>Credit Cards
+                                    <i class="fas fa-credit-card me-2 text-success"></i>Credit Cards
                                 </a></li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'account:account_info' %}">Account</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'account:kyc' %}">KYC</a>
-                        </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle position-relative" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-bell me-2"></i>Notifications
-                                {% if unread_notifications_count > 0 %}
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        {{ unread_notifications_count }}
-                                        <span class="visually-hidden">unread notifications</span>
-                                    </span>
-                                {% endif %}
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>Account
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" style="width: 350px;">
-                                <li><h6 class="dropdown-header">Recent Notifications</h6></li>
-                                {% if recent_notifications %}
-                                    {% for notification in recent_notifications %}
-                                        <li>
-                                            <a class="dropdown-item {% if notification.status == 'unread' %}fw-bold{% endif %}" href="{% url 'account:notifications' %}">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="flex-shrink-0">
-                                                        {% if notification.notification_type == 'transaction' %}
-                                                            <i class="fas fa-exchange-alt text-primary"></i>
-                                                        {% elif notification.notification_type == 'payment_request' %}
-                                                            <i class="fas fa-hand-holding-usd text-info"></i>
-                                                        {% elif notification.notification_type == 'kyc' %}
-                                                            <i class="fas fa-id-card text-warning"></i>
-                                                        {% elif notification.notification_type == 'security' %}
-                                                            <i class="fas fa-shield-alt text-danger"></i>
-                                                        {% else %}
-                                                            <i class="fas fa-info-circle text-secondary"></i>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="flex-grow-1 ms-2">
-                                                        <div class="fw-bold">{{ notification.title }}</div>
-                                                        <small class="text-muted">{{ notification.message|truncatechars:50 }}</small>
-                                                        <br><small class="text-muted">{{ notification.created_at|timesince }} ago</small>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </li>
-                                    {% endfor %}
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-center" href="{% url 'account:notifications' %}">View All Notifications</a></li>
-                                {% else %}
-                                    <li><span class="dropdown-item-text text-muted">No notifications</span></li>
-                                {% endif %}
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item" href="{% url 'account:account_info' %}">
+                                    <i class="fas fa-user-circle me-2 text-primary"></i>Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'account:kyc' %}">
+                                    <i class="fas fa-id-card me-2 text-warning"></i>KYC Verification
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'account:notifications' %}">
+                                    <i class="fas fa-bell me-2 text-info"></i>Notifications
+                                </a></li>
                             </ul>
                         </li>
                     {% endif %}
@@ -118,22 +101,99 @@
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>{{ user.username }}
+                        <li class="nav-item dropdown me-3">
+                            <a class="nav-link dropdown-toggle position-relative" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell me-1"></i>
+                                {% if unread_notifications_count > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                        {{ unread_notifications_count }}
+                                    </span>
+                                {% endif %}
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'account:account_info' %}">Profile</a></li>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="width: 380px;">
+                                <li class="px-3 py-2 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
+                                        <a href="{% url 'account:notifications' %}" class="text-decoration-none small">View all</a>
+                                    </div>
+                                </li>
+                                {% if recent_notifications %}
+                                    {% for notification in recent_notifications %}
+                                        <li>
+                                            <a class="dropdown-item py-3 {% if notification.status == 'unread' %}bg-light{% endif %}" href="{% url 'account:notifications' %}">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        {% if notification.notification_type == 'transaction' %}
+                                                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-exchange-alt text-primary"></i>
+                                                            </div>
+                                                        {% elif notification.notification_type == 'payment_request' %}
+                                                            <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-hand-holding-usd text-info"></i>
+                                                            </div>
+                                                        {% elif notification.notification_type == 'kyc' %}
+                                                            <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-id-card text-warning"></i>
+                                                            </div>
+                                                        {% elif notification.notification_type == 'security' %}
+                                                            <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-shield-alt text-danger"></i>
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-info-circle text-secondary"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <div class="fw-bold text-dark mb-1">{{ notification.title }}</div>
+                                                        <p class="text-muted small mb-1">{{ notification.message|truncatechars:60 }}</p>
+                                                        <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="px-3 py-4 text-center">
+                                        <i class="fas fa-bell fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted mb-0">No notifications</p>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user text-success"></i>
+                                </div>
+                                <span class="fw-medium">{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <li><h6 class="dropdown-header fw-bold text-dark">Account</h6></li>
+                                <li><a class="dropdown-item" href="{% url 'account:account_info' %}">
+                                    <i class="fas fa-user-circle me-2 text-primary"></i>Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'account:notifications' %}">
+                                    <i class="fas fa-bell me-2 text-info"></i>Notifications
+                                </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'userauths:logout' %}">Logout</a></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'userauths:logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+                                </a></li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'userauths:login' %}">Login</a>
+                            <a class="nav-link" href="{% url 'userauths:login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'userauths:register' %}">Register</a>
+                            <a class="nav-link" href="{% url 'userauths:register' %}">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -143,10 +203,21 @@
 
     <!-- Messages -->
     {% if messages %}
-        <div class="container mt-3">
+        <div class="container-fluid px-4 mt-3">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0" role="alert">
+                    <div class="d-flex align-items-center">
+                        {% if message.tags == 'success' %}
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        {% elif message.tags == 'info' %}
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
@@ -154,20 +225,22 @@
     {% endif %}
 
     <!-- Main Content -->
-    <main class="container my-4">
+    <main>
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
     <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container">
-            <div class="row">
+        <div class="container-fluid px-4">
+            <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h5><i class="fas fa-wallet me-2"></i>PayWay</h5>
-                    <p class="mb-0">Secure digital payments for everyone.</p>
+                    <h5 class="fw-bold mb-2">
+                        <i class="fas fa-wallet me-2 text-success"></i>PayWay
+                    </h5>
+                    <p class="mb-0 text-muted">Secure digital payments for everyone.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p class="mb-0">&copy; 2024 PayWay. All rights reserved.</p>
+                    <p class="mb-0 text-muted">&copy; 2024 PayWay. All rights reserved.</p>
                 </div>
             </div>
         </div>
@@ -197,95 +270,103 @@
                 const notificationLink = document.querySelector('.nav-link[href*="notifications"]');
                 const badge = notificationLink.querySelector('.badge');
                 
-                if (data.count > 0) {
-                    if (badge) {
-                        badge.textContent = data.count;
+                if (data.count !== lastNotificationCount) {
+                    if (data.count > 0) {
+                        if (badge) {
+                            badge.textContent = data.count;
+                        } else {
+                            const newBadge = document.createElement('span');
+                            newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                            newBadge.style.fontSize = '0.6rem';
+                            newBadge.textContent = data.count;
+                            notificationLink.appendChild(newBadge);
+                        }
                     } else {
-                        notificationLink.innerHTML += `
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                ${data.count}
-                                <span class="visually-hidden">unread notifications</span>
-                            </span>
-                        `;
+                        if (badge) {
+                            badge.remove();
+                        }
                     }
-                    
-                    // Show notification if count increased
-                    if (data.count > lastNotificationCount) {
-                        showNotificationToast(data.latest_notification);
-                    }
-                } else {
-                    if (badge) {
-                        badge.remove();
-                    }
+                    lastNotificationCount = data.count;
                 }
-                
-                lastNotificationCount = data.count;
             })
-            .catch(error => {
-                console.error('Error updating notification count:', error);
-            });
+            .catch(error => console.error('Error updating notifications:', error));
         }
         
-        function showNotificationToast(notification) {
-            // Create toast notification
-            const toastContainer = document.getElementById('toast-container');
-            if (!toastContainer) {
-                const container = document.createElement('div');
-                container.id = 'toast-container';
-                container.className = 'toast-container position-fixed top-0 end-0 p-3';
-                container.style.zIndex = '9999';
-                document.body.appendChild(container);
-            }
-            
-            const toastHtml = `
-                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header">
-                        <i class="fas fa-bell text-primary me-2"></i>
-                        <strong class="me-auto">New Notification</strong>
-                        <small>Just now</small>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">
-                        <strong>${notification.title}</strong><br>
-                        ${notification.message}
-                    </div>
-                </div>
-            `;
-            
-            const toastContainer = document.getElementById('toast-container');
-            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-            
-            const toastElement = toastContainer.lastElementChild;
-            const toast = new bootstrap.Toast(toastElement);
-            toast.show();
-            
-            // Remove toast after it's hidden
-            toastElement.addEventListener('hidden.bs.toast', () => {
-                toastElement.remove();
-            });
-        }
+        // Check for new notifications every 30 seconds
+        notificationCheckInterval = setInterval(updateNotificationCount, 30000);
         
-        // Start checking for notifications when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check every 30 seconds
-            notificationCheckInterval = setInterval(updateNotificationCount, 30000);
-            
-            // Also check when user becomes active
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) {
-                    updateNotificationCount();
-                }
-            });
-        });
-        
-        // Stop checking when page is unloaded
-        window.addEventListener('beforeunload', function() {
-            if (notificationCheckInterval) {
-                clearInterval(notificationCheckInterval);
+        // Update on page focus
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updateNotificationCount();
             }
         });
     </script>
     {% endif %}
+    
+    <style>
+    .dropdown-menu {
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+        z-index: 1050; /* Ensure dropdowns appear above all content */
+    }
+    
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        margin: 0.125rem 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-item:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        color: var(--bs-primary);
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s ease;
+    }
+    
+    .navbar-nav .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .alert {
+        border-radius: 0.5rem;
+        border: none;
+    }
+    
+    .btn-close {
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+    }
+    
+    .btn-close:hover {
+        opacity: 1;
+    }
+    
+    /* Additional z-index fixes for navbar components */
+    .navbar {
+        z-index: 1030;
+    }
+    
+    .navbar-collapse {
+        z-index: 1040;
+    }
+    
+    /* Ensure all dropdown menus have proper z-index */
+    .navbar .dropdown-menu {
+        z-index: 1050 !important;
+    }
+    
+    /* Fix for any potential container stacking issues */
+    .container-fluid {
+        position: relative;
+        z-index: 1;
+    }
+    </style>
     
     {% block extra_js %}{% endblock %}
 </body>

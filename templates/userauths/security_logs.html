@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Security Logs - PayWay{% endblock %}
+
+{% block extra_css %}
+<style>
+    .security-log-card {
+        border-left: 4px solid #007bff;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .security-log-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .log-event-type {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .log-timestamp {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .log-details {
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    
+    .risk-score-high {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    .risk-score-medium {
+        color: #ffc107;
+        font-weight: 600;
+    }
+    
+    .risk-score-low {
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 2rem;
+    }
+    
+    .page-info {
+        margin: 0 1rem;
+        color: #6c757d;
+    }
+    
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .event-type-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .event-type-login_success { background-color: #d4edda; color: #155724; }
+    .event-type-login_failed { background-color: #f8d7da; color: #721c24; }
+    .event-type-logout { background-color: #d1ecf1; color: #0c5460; }
+    .event-type-password_change { background-color: #fff3cd; color: #856404; }
+    .event-type-2fa_enabled { background-color: #d4edda; color: #155724; }
+    .event-type-2fa_disabled { background-color: #f8d7da; color: #721c24; }
+    .event-type-2fa_used { background-color: #d1ecf1; color: #0c5460; }
+    .event-type-2fa_failed { background-color: #f8d7da; color: #721c24; }
+    .event-type-account_locked { background-color: #f8d7da; color: #721c24; }
+    .event-type-account_unlocked { background-color: #d4edda; color: #155724; }
+    .event-type-device_added { background-color: #d1ecf1; color: #0c5460; }
+    .event-type-device_removed { background-color: #f8d7da; color: #721c24; }
+    .event-type-device_trusted { background-color: #d4edda; color: #155724; }
+    .event-type-suspicious_activity { background-color: #f8d7da; color: #721c24; }
+    .event-type-security_settings_changed { background-color: #fff3cd; color: #856404; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-shield-alt text-primary"></i>
+            Security Logs
+        </h1>
+        <a href="{% url 'userauths:security_dashboard' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Security Dashboard
+        </a>
+    </div>
+
+    <!-- Security Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Events
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ logs|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Low Risk Events
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for log in logs %}
+                                    {% if log.risk_score < 30 %}{{ forloop.counter }}{% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Medium Risk Events
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for log in logs %}
+                                    {% if log.risk_score >= 30 and log.risk_score < 70 %}{{ forloop.counter }}{% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                High Risk Events
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for log in logs %}
+                                    {% if log.risk_score >= 70 %}{{ forloop.counter }}{% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h5 class="mb-3">
+            <i class="fas fa-filter text-primary"></i>
+            Filter & Search
+        </h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="event_type" class="form-label">Event Type</label>
+                <select class="form-select" id="event_type" name="event_type">
+                    <option value="">All Events</option>
+                    <option value="login_success">Login Success</option>
+                    <option value="login_failed">Login Failed</option>
+                    <option value="logout">Logout</option>
+                    <option value="password_change">Password Change</option>
+                    <option value="2fa_enabled">2FA Enabled</option>
+                    <option value="2fa_disabled">2FA Disabled</option>
+                    <option value="2fa_used">2FA Used</option>
+                    <option value="2fa_failed">2FA Failed</option>
+                    <option value="account_locked">Account Locked</option>
+                    <option value="account_unlocked">Account Unlocked</option>
+                    <option value="device_added">Device Added</option>
+                    <option value="device_removed">Device Removed</option>
+                    <option value="device_trusted">Device Trusted</option>
+                    <option value="suspicious_activity">Suspicious Activity</option>
+                    <option value="security_settings_changed">Security Settings Changed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="risk_level" class="form-label">Risk Level</label>
+                <select class="form-select" id="risk_level" name="risk_level">
+                    <option value="">All Levels</option>
+                    <option value="low">Low (0-29)</option>
+                    <option value="medium">Medium (30-69)</option>
+                    <option value="high">High (70-100)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <a href="{% url 'userauths:security_logs' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Security Logs -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i>
+                Security Activity Log
+            </h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">Export Options:</div>
+                    <a class="dropdown-item" href="#" onclick="exportToCSV()">
+                        <i class="fas fa-download fa-sm fa-fw mr-2 text-gray-400"></i>
+                        Export to CSV
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="exportToPDF()">
+                        <i class="fas fa-file-pdf fa-sm fa-fw mr-2 text-gray-400"></i>
+                        Export to PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if logs %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="securityLogsTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Type</th>
+                                <th>Risk Score</th>
+                                <th>IP Address</th>
+                                <th>Location</th>
+                                <th>Timestamp</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3">
+                                            {% if log.event_type == 'login_success' %}
+                                                <i class="fas fa-sign-in-alt text-success"></i>
+                                            {% elif log.event_type == 'login_failed' %}
+                                                <i class="fas fa-times-circle text-danger"></i>
+                                            {% elif log.event_type == 'logout' %}
+                                                <i class="fas fa-sign-out-alt text-info"></i>
+                                            {% elif log.event_type == 'password_change' %}
+                                                <i class="fas fa-key text-warning"></i>
+                                            {% elif log.event_type == '2fa_enabled' %}
+                                                <i class="fas fa-shield-alt text-success"></i>
+                                            {% elif log.event_type == '2fa_disabled' %}
+                                                <i class="fas fa-shield-alt text-danger"></i>
+                                            {% elif log.event_type == 'account_locked' %}
+                                                <i class="fas fa-lock text-danger"></i>
+                                            {% elif log.event_type == 'device_added' %}
+                                                <i class="fas fa-desktop text-info"></i>
+                                            {% elif log.event_type == 'suspicious_activity' %}
+                                                <i class="fas fa-exclamation-triangle text-warning"></i>
+                                            {% else %}
+                                                <i class="fas fa-info-circle text-secondary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold">{{ log.get_event_type_display }}</div>
+                                            <small class="text-muted">{{ log.timestamp|date:"M d, Y H:i" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="event-type-badge event-type-{{ log.event_type }}">
+                                        {{ log.event_type|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if log.risk_score >= 70 %}
+                                        <span class="risk-score-high">{{ log.risk_score }}</span>
+                                    {% elif log.risk_score >= 30 %}
+                                        <span class="risk-score-medium">{{ log.risk_score }}</span>
+                                    {% else %}
+                                        <span class="risk-score-low">{{ log.risk_score }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code>{{ log.ip_address }}</code>
+                                </td>
+                                <td>
+                                    {% if log.location %}
+                                        <i class="fas fa-map-marker-alt text-muted"></i>
+                                        {{ log.location }}
+                                    {% else %}
+                                        <span class="text-muted">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="log-timestamp">
+                                        {{ log.timestamp|date:"M d, Y" }}<br>
+                                        <small>{{ log.timestamp|date:"H:i:s" }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if log.details %}
+                                        <button class="btn btn-sm btn-outline-info" type="button" data-toggle="collapse" data-target="#details-{{ log.id }}" aria-expanded="false">
+                                            <i class="fas fa-eye"></i> View Details
+                                        </button>
+                                        <div class="collapse mt-2" id="details-{{ log.id }}">
+                                            <div class="log-details">
+                                                <pre class="mb-0"><code>{{ log.details|pprint }}</code></pre>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">No details</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if total_pages > 1 %}
+                <div class="pagination-wrapper">
+                    <nav aria-label="Security logs pagination">
+                        <ul class="pagination">
+                            {% if current_page > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ current_page|add:'-1' }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in total_pages|get_range %}
+                                {% if page_num == current_page %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if current_page < total_pages %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ current_page|add:'1' }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <div class="page-info">
+                        Page {{ current_page }} of {{ total_pages }}
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-shield-alt fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-500">No Security Logs Found</h5>
+                    <p class="text-gray-400">Your security activity will appear here once you start using the platform.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Export functionality
+    function exportToCSV() {
+        const table = document.getElementById('securityLogsTable');
+        let csv = [];
+        
+        // Get headers
+        const headers = [];
+        for (let i = 0; i < table.rows[0].cells.length; i++) {
+            headers.push(table.rows[0].cells[i].textContent.trim());
+        }
+        csv.push(headers.join(','));
+        
+        // Get data rows
+        for (let i = 1; i < table.rows.length; i++) {
+            const row = [];
+            for (let j = 0; j < table.rows[i].cells.length; j++) {
+                let cell = table.rows[i].cells[j].textContent.trim();
+                // Escape commas and quotes
+                cell = cell.replace(/"/g, '""');
+                if (cell.includes(',')) {
+                    cell = `"${cell}"`;
+                }
+                row.push(cell);
+            }
+            csv.push(row.join(','));
+        }
+        
+        // Download CSV
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'security_logs.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    function exportToPDF() {
+        // Basic PDF export - you can enhance this with jsPDF library
+        alert('PDF export functionality will be implemented soon. For now, please use the CSV export option.');
+    }
+    
+    // Auto-refresh logs every 5 minutes
+    setInterval(function() {
+        // You can implement AJAX refresh here if needed
+    }, 300000);
+    
+    // Initialize tooltips
+    $(document).ready(function() {
+        $('[data-toggle="tooltip"]').tooltip();
+        
+        // Set default dates for filters
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        document.getElementById('date_to').value = today.toISOString().split('T')[0];
+        document.getElementById('date_from').value = thirtyDaysAgo.toISOString().split('T')[0];
+    });
+</script>
+{% endblock %}

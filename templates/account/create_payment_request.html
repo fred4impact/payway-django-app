@@ -3,146 +3,579 @@
 
 {% block title %}Request Money - PayWay{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-info text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-hand-holding-usd me-2"></i>
-                        Request Money
-                    </h4>
-                </div>
-                <div class="card-body">
-                    {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <h6>Please correct the following errors:</h6>
-                            {{ form.errors }}
-                        </div>
-                    {% endif %}
+{% block extra_css %}
+<style>
+/* Front Dashboard inspired styles */
+:root {
+    --primary-color: #377dff;
+    --secondary-color: #6c757d;
+    --success-color: #00d97e;
+    --info-color: #39afd1;
+    --warning-color: #f6c343;
+    --danger-color: #e63757;
+    --dark-color: #12263f;
+    --light-color: #f8f9fa;
+    --border-radius: 0.5rem;
+    --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --box-shadow-lg: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
 
-                    <form method="post" id="request-form">
-                        {% csrf_token %}
-                        
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.recipient_account.id_for_label }}" class="form-label">
-                                        <i class="fas fa-user me-1"></i>Recipient Account
-                                    </label>
-                                    {{ form.recipient_account }}
-                                    {% if form.recipient_account.help_text %}
-                                        <div class="form-text">{{ form.recipient_account.help_text }}</div>
-                                    {% endif %}
-                                    {% if form.recipient_account.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.recipient_account.errors.0 }}
-                                        </div>
-                                    {% endif %}
+body {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.page-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5a8cff 100%);
+    color: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--box-shadow-lg);
+}
+
+.page-header h1 {
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.stats-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.main-form-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-lg);
+    border: none;
+    overflow: hidden;
+}
+
+.form-section {
+    padding: 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.form-section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-right: 1rem;
+}
+
+.form-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin: 0;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    background-color: white;
+    box-shadow: 0 0 0 0.2rem rgba(55, 125, 255, 0.25);
+    outline: none;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5a8cff 100%);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 1rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--box-shadow);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow-lg);
+    background: linear-gradient(135deg, #2d6bff 0%, #4a7cff 100%);
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e9ecef;
+    z-index: 1;
+}
+
+.step-item {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.step-circle.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(55, 125, 255, 0.2);
+}
+
+.step-circle.completed {
+    background: var(--success-color);
+    color: white;
+}
+
+.step-circle.pending {
+    background: #e9ecef;
+    color: var(--secondary-color);
+}
+
+.step-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.step-description {
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    margin-top: 0.25rem;
+}
+
+.info-card {
+    background: linear-gradient(135deg, rgba(55, 125, 255, 0.1) 0%, rgba(90, 140, 255, 0.1) 100%);
+    border: 1px solid rgba(55, 125, 255, 0.2);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.quick-action-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--box-shadow);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--box-shadow-lg);
+    text-decoration: none;
+    color: inherit;
+}
+
+.quick-action-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+}
+
+.quick-action-title {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.quick-action-description {
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .progress-steps {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .progress-steps::before {
+        display: none;
+    }
+    
+    .form-section {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Modern Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1>
+                    <i class="fas fa-hand-holding-usd me-3"></i>
+                    Request Money
+                </h1>
+                <p>Ask someone to send you money securely and track your requests</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'account:payment_requests' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-list me-2"></i>
+                    View All Requests
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <div class="stats-number">0</div>
+                <div class="stats-label">Pending Requests</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-number">0</div>
+                <div class="stats-label">Completed</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stats-number">0</div>
+                <div class="stats-label">Expired</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stats-number">$0</div>
+                <div class="stats-label">Total Requested</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-12">
+            <!-- Progress Steps -->
+            <div class="progress-steps">
+                <div class="step-item">
+                    <div class="step-circle active">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="step-label">Recipient</div>
+                    <div class="step-description">Select who to ask</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-circle pending">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="step-label">Amount</div>
+                    <div class="step-description">Enter amount needed</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-circle pending">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-label">Send Request</div>
+                    <div class="step-description">Review and send</div>
+                </div>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="main-form-card">
+                {% if form.errors %}
+                    <div class="form-section">
+                        <div class="alert alert-danger border-0" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">Please correct the following errors:</h6>
+                                    {{ form.errors }}
                                 </div>
                             </div>
                         </div>
+                    </div>
+                {% endif %}
 
+                <form method="post" id="request-form">
+                    {% csrf_token %}
+                    
+                    <!-- Recipient Section -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="form-section-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h3 class="form-section-title">Recipient Information</h3>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.recipient_account.id_for_label }}" class="form-label">
+                                Recipient Account
+                            </label>
+                            {{ form.recipient_account }}
+                            {% if form.recipient_account.help_text %}
+                                <div class="form-text text-muted mt-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    {{ form.recipient_account.help_text }}
+                                </div>
+                            {% endif %}
+                            {% if form.recipient_account.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    {{ form.recipient_account.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Amount Section -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="form-section-icon bg-success bg-opacity-10 text-success">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <h3 class="form-section-title">Payment Details</h3>
+                        </div>
+                        
                         <div class="row">
-                            <div class="col-12">
-                                <div class="form-group mb-3">
+                            <div class="col-md-8">
+                                <div class="form-group">
                                     <label for="{{ form.amount.id_for_label }}" class="form-label">
-                                        <i class="fas fa-dollar-sign me-1"></i>Amount to Request
+                                        Amount to Request
                                     </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        {{ form.amount }}
-                                    </div>
+                                    {{ form.amount }}
                                     {% if form.amount.help_text %}
-                                        <div class="form-text">{{ form.amount.help_text }}</div>
+                                        <div class="form-text text-muted mt-2">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            {{ form.amount.help_text }}
+                                        </div>
                                     {% endif %}
                                     {% if form.amount.errors %}
-                                        <div class="invalid-feedback d-block">
+                                        <div class="invalid-feedback d-block mt-2">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
                                             {{ form.amount.errors.0 }}
                                         </div>
                                     {% endif %}
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.description.id_for_label }}" class="form-label">
-                                        <i class="fas fa-comment me-1"></i>Description
-                                    </label>
-                                    {{ form.description }}
-                                    {% if form.description.help_text %}
-                                        <div class="form-text">{{ form.description.help_text }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
                                     <label for="{{ form.expires_in_days.id_for_label }}" class="form-label">
-                                        <i class="fas fa-clock me-1"></i>Expires In
+                                        Expires In
                                     </label>
                                     {{ form.expires_in_days }}
-                                    {% if form.expires_in_days.help_text %}
-                                        <div class="form-text">{{ form.expires_in_days.help_text }}</div>
-                                    {% endif %}
                                 </div>
                             </div>
                         </div>
-
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>How it works:</strong> The recipient will receive a notification and can choose to pay or decline your request.
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-info btn-lg">
-                                <i class="fas fa-paper-plane me-2"></i>
-                                Send Request
-                            </button>
-                        </div>
-                    </form>
-
-                    <hr class="my-4">
-
-                    <div class="text-center">
-                        <p class="mb-2">Need to find someone's account?</p>
-                        <a href="{% url 'account:search_account' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-search me-2"></i>
-                            Search for Account
-                        </a>
                     </div>
-                </div>
+
+                    <!-- Description Section -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <div class="form-section-icon bg-info bg-opacity-10 text-info">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <h3 class="form-section-title">Additional Information</h3>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description (Optional)
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                                <div class="form-text text-muted mt-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    {{ form.description.help_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- How it works Information -->
+                    <div class="info-card">
+                        <div class="d-flex align-items-start">
+                            <div class="stats-icon bg-primary bg-opacity-10 text-primary me-3">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">How Payment Requests Work</h6>
+                                <p class="mb-0 text-muted">The recipient will receive a notification and can choose to pay or decline your request. You'll be notified of their decision via email and in-app notifications.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-section text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Send Payment Request
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Quick Actions -->
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card border-success">
-                        <div class="card-body text-center">
-                            <i class="fas fa-paper-plane fa-2x text-success mb-2"></i>
-                            <h6>Send Money</h6>
-                            <a href="{% url 'account:money_transfer' %}" class="btn btn-outline-success btn-sm">
-                                Send Money
-                            </a>
-                        </div>
+            <div class="quick-actions">
+                <a href="{% url 'account:money_transfer' %}" class="quick-action-card">
+                    <div class="quick-action-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-paper-plane"></i>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card border-warning">
-                        <div class="card-body text-center">
-                            <i class="fas fa-list fa-2x text-warning mb-2"></i>
-                            <h6>View Requests</h6>
-                            <a href="{% url 'account:payment_requests' %}" class="btn btn-outline-warning btn-sm">
-                                View All Requests
-                            </a>
-                        </div>
+                    <h6 class="quick-action-title">Send Money</h6>
+                    <p class="quick-action-description">Transfer money to others instantly</p>
+                    <span class="btn btn-outline-primary btn-sm">Send Money</span>
+                </a>
+                
+                <a href="{% url 'account:search_account' %}" class="quick-action-card">
+                    <div class="quick-action-icon bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-search"></i>
                     </div>
-                </div>
+                    <h6 class="quick-action-title">Find Account</h6>
+                    <p class="quick-action-description">Search for users by name or email</p>
+                    <span class="btn btn-outline-success btn-sm">Search Users</span>
+                </a>
+                
+                <a href="{% url 'account:payment_requests' %}" class="quick-action-card">
+                    <div class="quick-action-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <h6 class="quick-action-title">View Requests</h6>
+                    <p class="quick-action-description">See all your payment requests</p>
+                    <span class="btn btn-outline-warning btn-sm">View All Requests</span>
+                </a>
+                
+                <a href="{% url 'account:transactions' %}" class="quick-action-card">
+                    <div class="quick-action-icon bg-info bg-opacity-10 text-info">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h6 class="quick-action-title">Transaction History</h6>
+                    <p class="quick-action-description">View your payment history</p>
+                    <span class="btn btn-outline-info btn-sm">View History</span>
+                </a>
             </div>
         </div>
     </div>
@@ -176,6 +609,33 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     });
+
+    // Add focus effects to form inputs
+    const inputs = document.querySelectorAll('.form-control, .form-select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.closest('.form-group').classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.closest('.form-group').classList.remove('focused');
+        });
+    });
+
+    // Update progress steps based on form completion
+    function updateProgressSteps() {
+        const recipient = document.querySelector('#id_recipient_account').value;
+        const amount = document.querySelector('#id_amount').value;
+        
+        if (recipient && amount) {
+            document.querySelectorAll('.step-circle')[1].classList.remove('pending');
+            document.querySelectorAll('.step-circle')[1].classList.add('active');
+        }
+    }
+
+    // Add event listeners for progress updates
+    document.querySelector('#id_recipient_account').addEventListener('change', updateProgressSteps);
+    document.querySelector('#id_amount').addEventListener('input', updateProgressSteps);
 });
 </script>
 {% endblock %} 

@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+
+{% block title %}Currency Converter - PayWay{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1 text-dark fw-bold">
+                        <i class="fas fa-exchange-alt me-2 text-primary"></i>
+                        Currency Converter
+                    </h1>
+                    <p class="text-muted mb-0">Convert between different currencies using real-time exchange rates</p>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-1"></i>
+                            Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF Report</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel Data</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i>Print</a></li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'account:international_transfers' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Transfers
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas fa-dollar-sign text-primary fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">USD Exchange Rate</h6>
+                            <h4 class="fw-bold text-dark mb-0">1.0000</h4>
+                            <small class="text-muted">Base Currency</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas fa-euro-sign text-success fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">EUR Rate</h6>
+                            <h4 class="fw-bold text-dark mb-0">0.8500</h4>
+                            <small class="text-success">+2.5% today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas fa-pound-sign text-warning fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">GBP Rate</h6>
+                            <h4 class="fw-bold text-dark mb-0">0.7300</h4>
+                            <small class="text-warning">-1.2% today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                <i class="fas fa-yen-sign text-info fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">JPY Rate</h6>
+                            <h4 class="fw-bold text-dark mb-0">110.00</h4>
+                            <small class="text-info">+0.8% today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column - Converter -->
+        <div class="col-xl-8">
+            <!-- Converter Form -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-calculator me-2 text-primary"></i>
+                        Convert Currency
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="get" id="converter-form">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.from_currency.id_for_label }}" class="form-label fw-bold text-dark">
+                                        <i class="fas fa-arrow-right me-2 text-primary"></i>
+                                        From Currency
+                                    </label>
+                                    {{ form.from_currency }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label fw-bold text-dark">
+                                        <i class="fas fa-dollar-sign me-2 text-success"></i>
+                                        Amount
+                                    </label>
+                                    {{ form.amount }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.to_currency.id_for_label }}" class="form-label fw-bold text-dark">
+                                        <i class="fas fa-arrow-left me-2 text-info"></i>
+                                        To Currency
+                                    </label>
+                                    {{ form.to_currency }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                Convert Now
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Conversion Result -->
+                    {% if conversion_result %}
+                        <div class="mt-4">
+                            <div class="card border-success border-2">
+                                <div class="card-body p-4">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4 text-center">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                                <i class="fas fa-dollar-sign text-primary fa-2x"></i>
+                                            </div>
+                                            <h4 class="fw-bold text-primary mb-1">
+                                                {{ conversion_result.from_currency.symbol }}{{ conversion_result.original_amount|floatformat:2 }}
+                                            </h4>
+                                            <p class="text-muted mb-0">{{ conversion_result.from_currency.name }}</p>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                                <i class="fas fa-exchange-alt text-success fa-2x"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-success mb-1">Exchange Rate</h6>
+                                            <p class="text-muted mb-0">{{ conversion_result.exchange_rate|floatformat:6 }}</p>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                                <i class="fas fa-check-circle text-success fa-2x"></i>
+                                            </div>
+                                            <h4 class="fw-bold text-success mb-1">
+                                                {{ conversion_result.to_currency.symbol }}{{ conversion_result.converted_amount|floatformat:2 }}
+                                            </h4>
+                                            <p class="text-muted mb-0">{{ conversion_result.to_currency.name }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Exchange Rates Table -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-table me-2 text-warning"></i>
+                        Current Exchange Rates (USD Base)
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0">Currency</th>
+                                    <th class="border-0">Code</th>
+                                    <th class="border-0">Symbol</th>
+                                    <th class="border-0">Rate to USD</th>
+                                    <th class="border-0">Rate from USD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for currency in currencies %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                    <i class="fas fa-coins text-primary"></i>
+                                                </div>
+                                                <strong>{{ currency.name }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary-subtle text-primary">{{ currency.code }}</span>
+                                        </td>
+                                        <td>{{ currency.symbol }}</td>
+                                        <td>
+                                            {% if currency.code == 'USD' %}
+                                                <span class="badge bg-success-subtle text-success">1.000000</span>
+                                            {% else %}
+                                                <span class="fw-bold">{{ currency.exchange_rate_to_usd|floatformat:6 }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if currency.code == 'USD' %}
+                                                <span class="badge bg-success-subtle text-success">1.000000</span>
+                                            {% else %}
+                                                <span class="fw-bold">{{ currency.exchange_rate_to_usd|floatformat:6 }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Quick Actions & Info -->
+        <div class="col-xl-4">
+            <!-- Quick Conversions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-bolt me-2 text-warning"></i>
+                        Quick Conversions
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <h6 class="text-primary fw-bold mb-3">
+                            <i class="fas fa-star me-2"></i>Popular Amounts
+                        </h6>
+                        <div class="list-group list-group-flush">
+                            <a href="?from_currency=USD&to_currency=EUR&amount=100" class="list-group-item list-group-item-action border-0 bg-light rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">$100 USD → EUR</span>
+                                    <span class="badge bg-primary-subtle text-primary">≈ €85.00</span>
+                                </div>
+                            </a>
+                            <a href="?from_currency=USD&to_currency=GBP&amount=100" class="list-group-item list-group-item-action border-0 bg-light rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">$100 USD → GBP</span>
+                                    <span class="badge bg-success-subtle text-success">≈ £73.00</span>
+                                </div>
+                            </a>
+                            <a href="?from_currency=EUR&to_currency=USD&amount=100" class="list-group-item list-group-item-action border-0 bg-light rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">€100 EUR → USD</span>
+                                    <span class="badge bg-warning-subtle text-warning">≈ $117.65</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h6 class="text-success fw-bold mb-3">
+                            <i class="fas fa-fire me-2"></i>Common Transfers
+                        </h6>
+                        <div class="list-group list-group-flush">
+                            <a href="?from_currency=USD&to_currency=CAD&amount=500" class="list-group-item list-group-item-action border-0 bg-light rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">$500 USD → CAD</span>
+                                    <span class="badge bg-info-subtle text-info">≈ C$625.00</span>
+                                </div>
+                            </a>
+                            <a href="?from_currency=USD&to_currency=JPY&amount=1000" class="list-group-item list-group-item-action border-0 bg-light rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">$1000 USD → JPY</span>
+                                    <span class="badge bg-danger-subtle text-danger">≈ ¥110,000</span>
+                                </div>
+                            </a>
+                            <a href="?from_currency=GBP&to_currency=EUR&amount=200" class="list-group-item list-group-item-action border-0 bg-light rounded mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">£200 GBP → EUR</span>
+                                    <span class="badge bg-secondary-subtle text-secondary">≈ €232.88</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Information -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-info-circle me-2 text-info"></i>
+                        Important Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <h6 class="text-primary fw-bold mb-3">
+                            <i class="fas fa-chart-line me-2"></i>Exchange Rates
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Rates updated daily
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                All rates relative to USD
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                For informational purposes
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h6 class="text-warning fw-bold mb-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Transfer Fees
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-info text-info me-2"></i>
+                                International transfers have fees
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info text-info me-2"></i>
+                                Fees vary by currency
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-info text-info me-2"></i>
+                                Use fee calculator for costs
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+.list-group-item:hover {
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fromCurrency = document.getElementById('{{ form.from_currency.id_for_label }}');
+    const toCurrency = document.getElementById('{{ form.to_currency.id_for_label }}');
+    const amount = document.getElementById('{{ form.amount.id_for_label }}');
+    
+    // Auto-submit form when values change
+    function autoConvert() {
+        if (fromCurrency.value && toCurrency.value && amount.value) {
+            document.getElementById('converter-form').submit();
+        }
+    }
+    
+    fromCurrency.addEventListener('change', autoConvert);
+    toCurrency.addEventListener('change', autoConvert);
+    amount.addEventListener('input', function() {
+        // Debounce the input
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(autoConvert, 1000);
+    });
+    
+    // Add smooth scrolling for better UX
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

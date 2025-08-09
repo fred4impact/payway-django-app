@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}SWIFT Code Search - PayWay{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-search me-2"></i>
+                        SWIFT Code Search
+                    </h2>
+                    <p class="text-muted mb-0">Find bank SWIFT/BIC codes for international transfers</p>
+                </div>
+                <a href="{% url 'account:international_transfers' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Transfers
+                </a>
+            </div>
+
+            <!-- Search Form -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.search.id_for_label }}" class="form-label">
+                                <i class="fas fa-search me-2"></i>
+                                Search Banks
+                            </label>
+                            {{ form.search }}
+                            <small class="form-text text-muted">Search by bank name, SWIFT code, country, or city</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.country.id_for_label }}" class="form-label">
+                                <i class="fas fa-flag me-2"></i>
+                                Filter by Country
+                            </label>
+                            {{ form.country }}
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>
+                                Search
+                            </button>
+                            <a href="{% url 'account:swift_code_search' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            {% if form.search.value or form.country.value %}
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Search Results
+                            {% if total_banks %}
+                                <span class="badge bg-primary ms-2">{{ total_banks }} banks found</span>
+                            {% endif %}
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if page_obj %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>SWIFT Code</th>
+                                            <th>Bank Name</th>
+                                            <th>Country</th>
+                                            <th>City</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for bank in page_obj %}
+                                            <tr>
+                                                <td>
+                                                    <code class="text-primary">{{ bank.swift_code }}</code>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ bank.bank_name }}</strong>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info">{{ bank.country }}</span>
+                                                </td>
+                                                <td>{{ bank.city }}</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" 
+                                                            onclick="copySwiftCode('{{ bank.swift_code }}')"
+                                                            title="Copy SWIFT code">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if page_obj.has_other_pages %}
+                                <div class="card-footer">
+                                    <nav aria-label="Bank search pagination">
+                                        <ul class="pagination justify-content-center mb-0">
+                                            {% if page_obj.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if form.search.value %}&search={{ form.search.value }}{% endif %}{% if form.country.value %}&country={{ form.country.value }}{% endif %}">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+
+                                            {% for num in page_obj.paginator.page_range %}
+                                                {% if page_obj.number == num %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ num }}</span>
+                                                    </li>
+                                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ num }}{% if form.search.value %}&search={{ form.search.value }}{% endif %}{% if form.country.value %}&country={{ form.country.value }}{% endif %}">{{ num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            {% if page_obj.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if form.search.value %}&search={{ form.search.value }}{% endif %}{% if form.country.value %}&country={{ form.country.value }}{% endif %}">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Banks Found</h5>
+                                <p class="text-muted">Try adjusting your search criteria or browse by country.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <!-- Browse by Country -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-globe me-2"></i>
+                            Browse Banks by Country
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-flag-usa fa-2x text-primary mb-2"></i>
+                                        <h6>United States</h6>
+                                        <p class="text-muted">5 major banks</p>
+                                        <a href="?country=United%20States" class="btn btn-outline-primary btn-sm">View Banks</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-flag fa-2x text-success mb-2"></i>
+                                        <h6>United Kingdom</h6>
+                                        <p class="text-muted">5 major banks</p>
+                                        <a href="?country=United%20Kingdom" class="btn btn-outline-success btn-sm">View Banks</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-flag fa-2x text-warning mb-2"></i>
+                                        <h6>Germany</h6>
+                                        <p class="text-muted">4 major banks</p>
+                                        <a href="?country=Germany" class="btn btn-outline-warning btn-sm">View Banks</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-flag fa-2x text-info mb-2"></i>
+                                        <h6>France</h6>
+                                        <p class="text-muted">4 major banks</p>
+                                        <a href="?country=France" class="btn btn-outline-info btn-sm">View Banks</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-flag fa-2x text-danger mb-2"></i>
+                                        <h6>Canada</h6>
+                                        <p class="text-muted">4 major banks</p>
+                                        <a href="?country=Canada" class="btn btn-outline-danger btn-sm">View Banks</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-flag fa-2x text-secondary mb-2"></i>
+                                        <h6>Australia</h6>
+                                        <p class="text-muted">4 major banks</p>
+                                        <a href="?country=Australia" class="btn btn-outline-secondary btn-sm">View Banks</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copySwiftCode(swiftCode) {
+    navigator.clipboard.writeText(swiftCode).then(function() {
+        // Show success message
+        const button = event.target.closest('button');
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-success');
+        
+        setTimeout(function() {
+            button.innerHTML = originalIcon;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-primary');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+{% endblock %}

@@ -18,12 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
     path('auth/', include('userauths.urls')),
     path('account/', include('account.urls')),
+    # Handle favicon.ico requests
+    path('favicon.ico', RedirectView.as_view(url='/static/images/favicon.svg', permanent=True)),
 ]
 
 # Serve media files during development

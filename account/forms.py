@@ -1,9 +1,11 @@
 from django import forms
 from django.utils import timezone
-from .models import KYC, Transaction, PaymentRequest, Account, CreditCard
+from .models import KYC, Transaction, PaymentRequest, Account, CreditCard, Currency, Bank, InternationalTransfer
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column
 from django.contrib.auth import get_user_model
+from decimal import Decimal
+import re
 
 User = get_user_model()
 
@@ -506,3 +508,208 @@ class CardWithdrawalForm(forms.Form):
                 raise forms.ValidationError('Insufficient balance or card cannot be used for withdrawal')
         
         return cleaned_data 
+
+
+class InternationalTransferForm(forms.ModelForm):
+    """Form for international transfers"""
+    swift_code = forms.CharField(
+        max_length=11,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter SWIFT/BIC code (e.g., CHASUS33XXX)',
+            'autocomplete': 'off'
+        }),
+        help_text='Enter the 8 or 11 character SWIFT/BIC code'
+    )
+    
+    class Meta:
+        model = InternationalTransfer
+        fields = [
+            'amount', 'currency', 'recipient_name', 'recipient_account_number',
+            'recipient_country', 'recipient_city', 'description'
+        ]
+        widgets = {
+            'amount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter amount',
+                'step': '0.01',
+                'min': '1.00'
+            }),
+            'currency': forms.Select(attrs={'class': 'form-control'}),
+            'recipient_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Recipient full name'
+            }),
+            'recipient_account_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Recipient account number'
+            }),
+            'recipient_country': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Recipient country'
+            }),
+            'recipient_city': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Recipient city'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Transfer description (optional)'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show active currencies
+        self.fields['currency'].queryset = Currency.objects.filter(is_active=True)
+    
+    def clean_swift_code(self):
+        swift_code = self.cleaned_data['swift_code'].upper().strip()
+        
+        # Basic format validation
+        if len(swift_code) not in [8, 11]:
+            raise forms.ValidationError('SWIFT code must be 8 or 11 characters long')
+        
+        if not swift_code.isalnum():
+            raise forms.ValidationError('SWIFT code must contain only letters and numbers')
+        
+        # Check if bank exists in our database
+        try:
+            bank = Bank.objects.get(swift_code=swift_code, is_active=True)
+            self.bank = bank  # Store for later use
+        except Bank.DoesNotExist:
+            raise forms.ValidationError('SWIFT code not found in our database. Please check the code or contact support.')
+        
+        return swift_code
+    
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        
+        if amount <= 0:
+            raise forms.ValidationError('Amount must be greater than zero')
+        
+        if amount < 1.00:
+            raise forms.ValidationError('Minimum transfer amount is $1.00')
+        
+        if amount > 10000.00:
+            raise forms.ValidationError('Maximum transfer amount is $10,000.00')
+        
+        return amount
+    
+    def clean_recipient_account_number(self):
+        account_number = self.cleaned_data['recipient_account_number'].strip()
+        
+        if len(account_number) < 5:
+            raise forms.ValidationError('Account number must be at least 5 characters long')
+        
+        if len(account_number) > 50:
+            raise forms.ValidationError('Account number is too long')
+        
+        return account_number
+    
+    def calculate_transfer_fee(self, amount, currency_code):
+        """Calculate international transfer fee based on amount and currency"""
+        # Static fee structure for MVP
+        fee_structure = {
+            'USD': {'percentage': 0.02, 'min_fee': 5.00, 'max_fee': 50.00},
+            'EUR': {'percentage': 0.025, 'min_fee': 5.00, 'max_fee': 60.00},
+            'GBP': {'percentage': 0.03, 'min_fee': 5.00, 'max_fee': 75.00},
+            'JPY': {'percentage': 0.025, 'min_fee': 500.00, 'max_fee': 5000.00},
+            'CAD': {'percentage': 0.025, 'min_fee': 6.00, 'max_fee': 60.00},
+            'AUD': {'percentage': 0.025, 'min_fee': 6.00, 'max_fee': 65.00},
+            'CHF': {'percentage': 0.025, 'min_fee': 5.00, 'max_fee': 55.00},
+            'SGD': {'percentage': 0.025, 'min_fee': 6.00, 'max_fee': 65.00},
+            'HKD': {'percentage': 0.025, 'min_fee': 40.00, 'max_fee': 400.00},
+            'NZD': {'percentage': 0.025, 'min_fee': 7.00, 'max_fee': 70.00},
+        }
+        
+        # Default to USD structure if currency not found
+        structure = fee_structure.get(currency_code, fee_structure['USD'])
+        
+        # Calculate percentage fee
+        percentage_fee = amount * Decimal(str(structure['percentage']))
+        
+        # Apply min/max limits
+        fee = max(structure['min_fee'], min(percentage_fee, structure['max_fee']))
+        
+        return fee
+
+
+class SwiftCodeSearchForm(forms.Form):
+    """Form for searching SWIFT codes"""
+    search = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search by bank name, country, or SWIFT code...'
+        })
+    )
+    
+    country = forms.ChoiceField(
+        choices=[('', 'All Countries')] + [
+            ('United States', 'United States'),
+            ('United Kingdom', 'United Kingdom'),
+            ('Germany', 'Germany'),
+            ('France', 'France'),
+            ('Canada', 'Canada'),
+            ('Australia', 'Australia'),
+            ('Japan', 'Japan'),
+            ('Switzerland', 'Switzerland'),
+            ('Singapore', 'Singapore'),
+            ('Hong Kong', 'Hong Kong'),
+        ],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+
+class CurrencyConverterForm(forms.Form):
+    """Form for currency conversion"""
+    from_currency = forms.ModelChoiceField(
+        queryset=Currency.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='From Currency'
+    )
+    
+    to_currency = forms.ModelChoiceField(
+        queryset=Currency.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='To Currency'
+    )
+    
+    amount = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter amount',
+            'step': '0.01',
+            'min': '0.01'
+        })
+    )
+    
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount <= 0:
+            raise forms.ValidationError('Amount must be greater than zero')
+        return amount
+    
+    def convert_currency(self):
+        """Convert amount between currencies using static rates"""
+        amount = self.cleaned_data['amount']
+        from_currency = self.cleaned_data['from_currency']
+        to_currency = self.cleaned_data['to_currency']
+        
+        # Convert to USD first, then to target currency
+        amount_in_usd = amount / from_currency.exchange_rate_to_usd
+        converted_amount = amount_in_usd * to_currency.exchange_rate_to_usd
+        
+        return {
+            'original_amount': amount,
+            'converted_amount': converted_amount,
+            'from_currency': from_currency,
+            'to_currency': to_currency,
+            'exchange_rate': to_currency.exchange_rate_to_usd / from_currency.exchange_rate_to_usd
+        } 

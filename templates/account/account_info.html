@@ -3,167 +3,422 @@
 {% block title %}Account Information - PayWay{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1 class="h3 mb-4">
-            <i class="fas fa-user me-2"></i>Account Information
-        </h1>
-    </div>
-</div>
-
-<!-- Account Details -->
-{% if account %}
-<div class="row mb-4">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-wallet me-2"></i>Account Details
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Account Number:</strong> {{ account.account_number }}</p>
-                        <p><strong>Account Type:</strong> {{ account.account_type|title }}</p>
-                        <p><strong>Balance:</strong> ${{ account.account_balance|floatformat:2 }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Status:</strong> 
-                            <span class="badge bg-{% if account.is_active %}success{% else %}danger{% endif %}">
-                                {{ account.is_active|yesno:"Active,Inactive" }}
-                            </span>
-                        </p>
-                        <p><strong>Created:</strong> {{ account.created_at|date:"M d, Y" }}</p>
-                        <p><strong>Last Updated:</strong> {{ account.updated_at|date:"M d, Y" }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4">
-        <div class="card border-0 shadow">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-user me-2"></i>User Profile
-                </h5>
-            </div>
-            <div class="card-body text-center">
-                {% if user.profile_picture %}
-                    <img src="{{ user.profile_picture.url }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
-                {% else %}
-                    <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
-                        <i class="fas fa-user fa-3x text-white"></i>
-                    </div>
-                {% endif %}
-                <h6>{{ user.get_full_name|default:user.username }}</h6>
-                <p class="text-muted">{{ user.email }}</p>
-                {% if user.phone_number %}
-                    <p class="text-muted">{{ user.phone_number }}</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- KYC Status -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0">
-                    <i class="fas fa-id-card me-2"></i>KYC Status
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if kyc %}
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Status:</strong> 
-                                <span class="badge bg-{% if kyc.verification_status == 'approved' %}success{% elif kyc.verification_status == 'rejected' %}danger{% else %}warning{% endif %}">
-                                    {{ kyc.verification_status|title }}
+<div class="container-fluid px-4 py-4">
+    <!-- Profile Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-user fa-2x text-white"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col">
+                            <h1 class="h3 mb-1 fw-bold text-dark">{{ user.get_full_name|default:user.username }}</h1>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-envelope me-2"></i>{{ user.email }}
+                                {% if user.phone_number %}
+                                    <span class="ms-3">
+                                        <i class="fas fa-phone me-2"></i>{{ user.phone_number }}
+                                    </span>
+                                {% endif %}
+                            </p>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success-subtle text-success px-3 py-2 me-3">
+                                    <i class="fas fa-circle me-1"></i>
+                                    Account Active
                                 </span>
-                            </p>
-                            <p><strong>Full Name:</strong> {{ kyc.full_name }}</p>
-                            <p><strong>Submitted:</strong> {{ kyc.submitted_at|date:"M d, Y" }}</p>
+                                <span class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Joined {{ user.date_joined|date:"M Y" }}
+                                </span>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <p><strong>Document Verified:</strong> 
-                                <i class="fas fa-{% if kyc.document_verified %}check text-success{% else %}times text-danger{% endif %}"></i>
-                            </p>
-                            <p><strong>Face Verified:</strong> 
-                                <i class="fas fa-{% if kyc.face_verified %}check text-success{% else %}times text-danger{% endif %}"></i>
-                            </p>
-                            <p><strong>AI Confidence:</strong> {{ kyc.verification_confidence|floatformat:1 }}%</p>
+                        <div class="col-auto">
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog me-1"></i>
+                                    Settings
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit Profile</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-shield-alt me-2"></i>Security</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i>Export Data</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <a href="{% url 'account:kyc_detail' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-eye me-2"></i>View KYC Details
-                        </a>
-                    </div>
-                {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                        <h6>KYC Not Completed</h6>
-                        <p class="text-muted">Complete your KYC verification to access all features.</p>
-                        <a href="{% url 'account:kyc' %}" class="btn btn-warning">
-                            <i class="fas fa-id-card me-2"></i>Complete KYC
-                        </a>
-                    </div>
-                {% endif %}
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Quick Actions -->
-<div class="row">
-    <div class="col-12">
-        <div class="card border-0 shadow">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-bolt me-2"></i>Quick Actions
-                </h5>
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column - Account Details -->
+        <div class="col-xl-8">
+            <!-- Account Information -->
+            {% if account %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-wallet me-2 text-primary"></i>
+                        Account Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-credit-card text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Account Number</h6>
+                                    <p class="mb-0 text-muted">{{ account.account_number }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-dollar-sign text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Account Balance</h6>
+                                    <p class="mb-0 text-muted">${{ account.account_balance|floatformat:2 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-tag text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Account Type</h6>
+                                    <p class="mb-0 text-muted">{{ account.account_type|title }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-calendar text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">Created Date</h6>
+                                    <p class="mb-0 text-muted">{{ account.created_at|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-outline-success w-100">
-                            <i class="fas fa-paper-plane me-2"></i>Send Money
+
+            <!-- KYC Status -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-id-card me-2 text-warning"></i>
+                        KYC Verification Status
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if kyc %}
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-{% if kyc.verification_status == 'approved' %}success{% elif kyc.verification_status == 'rejected' %}danger{% else %}warning{% endif %} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-shield-check text-{% if kyc.verification_status == 'approved' %}success{% elif kyc.verification_status == 'rejected' %}danger{% else %}warning{% endif %}"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-dark">Verification Status</h6>
+                                        <span class="badge bg-{% if kyc.verification_status == 'approved' %}success{% elif kyc.verification_status == 'rejected' %}danger{% else %}warning{% endif %}-subtle text-{% if kyc.verification_status == 'approved' %}success{% elif kyc.verification_status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                            {{ kyc.verification_status|title }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-info"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-dark">Full Name</h6>
+                                        <p class="mb-0 text-muted">{{ kyc.full_name }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-file-alt text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-dark">Document Verified</h6>
+                                        <p class="mb-0">
+                                            {% if kyc.document_verified %}
+                                                <span class="badge bg-success-subtle text-success">
+                                                    <i class="fas fa-check me-1"></i>Verified
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger-subtle text-danger">
+                                                    <i class="fas fa-times me-1"></i>Not Verified
+                                                </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-camera text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-dark">Face Verified</h6>
+                                        <p class="mb-0">
+                                            {% if kyc.face_verified %}
+                                                <span class="badge bg-success-subtle text-success">
+                                                    <i class="fas fa-check me-1"></i>Verified
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger-subtle text-danger">
+                                                    <i class="fas fa-times me-1"></i>Not Verified
+                                                </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{% url 'account:kyc_detail' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-eye me-2"></i>View KYC Details
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-2">KYC Not Completed</h6>
+                            <p class="text-muted mb-3">Complete your KYC verification to access all features and increase your transaction limits.</p>
+                            <a href="{% url 'account:kyc' %}" class="btn btn-warning">
+                                <i class="fas fa-id-card me-2"></i>Complete KYC
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-clock me-2 text-info"></i>
+                        Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for transaction in user.sent_transactions.all|slice:":3" %}
+                            <div class="list-group-item border-0 px-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-arrow-up text-danger"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold text-dark">Sent to {{ transaction.receiver.get_full_name|default:transaction.receiver.email }}</h6>
+                                        <p class="mb-0 text-muted">{{ transaction.created_at|timesince }} ago</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="fw-bold text-danger">-${{ transaction.amount|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% for transaction in user.received_transactions.all|slice:":3" %}
+                            <div class="list-group-item border-0 px-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-arrow-down text-success"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold text-dark">Received from {{ transaction.sender.get_full_name|default:transaction.sender.email }}</h6>
+                                        <p class="mb-0 text-muted">{{ transaction.created_at|timesince }} ago</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="fw-bold text-success">+${{ transaction.amount|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% if not user.sent_transactions.all and not user.received_transactions.all %}
+                            <div class="text-center py-4">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fas fa-inbox fa-2x text-muted"></i>
+                                </div>
+                                <h6 class="text-muted mb-2">No Recent Activity</h6>
+                                <p class="text-muted mb-0">Start by sending or receiving money</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-info-circle fa-2x text-info"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-2">Account Setup Required</h6>
+                    <p class="text-muted mb-0">Your account is being set up. Please wait a moment while we create your account details.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Quick Actions & Stats -->
+        <div class="col-xl-4">
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-bolt me-2 text-primary"></i>
+                        Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'account:money_transfer' %}" class="btn btn-outline-primary btn-sm text-start">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Send Money
+                        </a>
+                        <a href="{% url 'account:create_payment_request' %}" class="btn btn-outline-info btn-sm text-start">
+                            <i class="fas fa-hand-holding-usd me-2"></i>
+                            Request Money
+                        </a>
+                        <a href="{% url 'account:search_account' %}" class="btn btn-outline-success btn-sm text-start">
+                            <i class="fas fa-search me-2"></i>
+                            Find Account
+                        </a>
+                        <a href="{% url 'account:transactions' %}" class="btn btn-outline-warning btn-sm text-start">
+                            <i class="fas fa-history me-2"></i>
+                            Transaction History
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-download me-2"></i>Request Money
-                        </a>
+                </div>
+            </div>
+
+            <!-- Account Stats -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-chart-bar me-2 text-success"></i>
+                        Account Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h4 class="fw-bold text-primary mb-1">{{ user.sent_transactions.count }}</h4>
+                            <small class="text-muted">Sent</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="fw-bold text-success mb-1">{{ user.received_transactions.count }}</h4>
+                            <small class="text-muted">Received</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="fw-bold text-info mb-1">{{ user.received_requests.count }}</h4>
+                            <small class="text-muted">Requests</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="fw-bold text-warning mb-1">{{ user.credit_cards.count }}</h4>
+                            <small class="text-muted">Cards</small>
+                        </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-outline-info w-100">
-                            <i class="fas fa-credit-card me-2"></i>Add Card
-                        </a>
+                </div>
+            </div>
+
+            <!-- Account Status -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-shield-alt me-2 text-warning"></i>
+                        Account Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                            <i class="fas fa-check text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">Account Active</h6>
+                            <small class="text-muted">Your account is fully operational</small>
+                        </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                        </a>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                            <i class="fas fa-envelope text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">Email Verified</h6>
+                            <small class="text-muted">Your email address is confirmed</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-{% if kyc and kyc.verification_status == 'approved' %}success{% elif kyc %}warning{% else %}danger{% endif %} bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                            <i class="fas fa-id-card text-{% if kyc and kyc.verification_status == 'approved' %}success{% elif kyc %}warning{% else %}danger{% endif %}"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">KYC Status</h6>
+                            <small class="text-muted">
+                                {% if kyc and kyc.verification_status == 'approved' %}
+                                    Fully verified
+                                {% elif kyc %}
+                                    Under review
+                                {% else %}
+                                    Not completed
+                                {% endif %}
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% else %}
-<div class="row">
-    <div class="col-12">
-        <div class="alert alert-info" role="alert">
-            <h6 class="alert-heading">
-                <i class="fas fa-info-circle me-2"></i>Account Setup Required
-            </h6>
-            <p class="mb-0">Your account is being set up. Please wait a moment while we create your account details.</p>
-        </div>
-    </div>
-</div>
-{% endif %}
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.list-group-item {
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.badge {
+    font-weight: 500;
+}
+</style>
 {% endblock %} 

@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Two-Factor Authentication - PayWay{% endblock %}
+
+{% block extra_css %}
+<style>
+    .verification-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .verification-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .verification-icon {
+        font-size: 3rem;
+        color: #007bff;
+        margin-bottom: 1rem;
+    }
+    
+    .verification-title {
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .verification-subtitle {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .method-info {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #007bff;
+    }
+    
+    .method-info h6 {
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .method-info p {
+        color: #6c757d;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+    
+    .code-input {
+        text-align: center;
+        font-size: 1.5rem;
+        letter-spacing: 0.5rem;
+        font-weight: 600;
+        color: #495057;
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .code-input:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    
+    .verification-button {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .backup-option {
+        text-align: center;
+        padding: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .backup-link {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .backup-link:hover {
+        color: #007bff;
+        text-decoration: underline;
+    }
+    
+    .security-notice {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: #856404;
+    }
+    
+    .security-notice i {
+        margin-right: 0.5rem;
+    }
+    
+    .countdown-timer {
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .resend-button {
+        background: none;
+        border: none;
+        color: #007bff;
+        text-decoration: underline;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .resend-button:disabled {
+        color: #6c757d;
+        cursor: not-allowed;
+        text-decoration: none;
+    }
+    
+    .error-message {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: #721c24;
+    }
+    
+    .error-message i {
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="verification-container">
+        <!-- Verification Header -->
+        <div class="verification-header">
+            <div class="verification-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2 class="verification-title">Two-Factor Authentication</h2>
+            <p class="verification-subtitle">Enter the verification code to continue</p>
+        </div>
+
+        <!-- Method Information -->
+        <div class="method-info">
+            <h6>
+                <i class="fas fa-info-circle text-primary"></i>
+                {% if method == 'totp' %}
+                    Authenticator App
+                {% elif method == 'sms' %}
+                    SMS Verification
+                {% else %}
+                    Verification Required
+                {% endif %}
+            </h6>
+            <p>
+                {% if method == 'totp' %}
+                    Open your authenticator app and enter the 6-digit code displayed for PayWay.
+                {% elif method == 'sms' %}
+                    We've sent a 6-digit verification code to your phone number. Enter it below.
+                {% else %}
+                    Please enter the verification code from your chosen method.
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="security-notice">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Security Notice:</strong> This verification helps protect your account from unauthorized access.
+        </div>
+
+        <!-- Error Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <!-- Verification Form -->
+        <form method="post" id="verificationForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="code" class="form-label">
+                    <i class="fas fa-key text-primary"></i>
+                    Verification Code
+                </label>
+                <input type="text" 
+                       class="form-control code-input" 
+                       id="code" 
+                       name="code" 
+                       placeholder="000000"
+                       maxlength="6"
+                       autocomplete="off"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       required>
+                <small class="form-text text-muted">
+                    Enter the 6-digit code from your 
+                    {% if method == 'totp' %}authenticator app{% else %}SMS message{% endif %}
+                </small>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary verification-button" id="verifyButton">
+                <i class="fas fa-check"></i>
+                Verify & Continue
+            </button>
+        </form>
+
+        <!-- Backup Options -->
+        <div class="backup-option">
+            <p class="mb-2">
+                <i class="fas fa-question-circle text-muted"></i>
+                Having trouble?
+            </p>
+            <a href="{% url 'userauths:two_factor_backup' %}" class="backup-link">
+                <i class="fas fa-key"></i>
+                Use a backup code instead
+            </a>
+        </div>
+
+        <!-- Additional Help -->
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                <i class="fas fa-clock"></i>
+                This session will expire in 10 minutes for security
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        const codeInput = $('#code');
+        const verifyButton = $('#verifyButton');
+        
+        // Auto-focus on code input
+        codeInput.focus();
+        
+        // Auto-format code input (add spaces every 2 digits)
+        codeInput.on('input', function() {
+            let value = $(this).val().replace(/\D/g, '');
+            if (value.length > 6) {
+                value = value.substring(0, 6);
+            }
+            $(this).val(value);
+            
+            // Enable/disable submit button based on code length
+            if (value.length === 6) {
+                verifyButton.prop('disabled', false);
+            } else {
+                verifyButton.prop('disabled', true);
+            }
+        });
+        
+        // Handle form submission
+        $('#verificationForm').submit(function(e) {
+            const code = codeInput.val();
+            
+            if (code.length !== 6) {
+                e.preventDefault();
+                alert('Please enter a complete 6-digit verification code.');
+                codeInput.focus();
+                return false;
+            }
+            
+            // Disable button and show loading state
+            verifyButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Verifying...');
+        });
+        
+        // Auto-submit when 6 digits are entered
+        codeInput.on('input', function() {
+            if ($(this).val().length === 6) {
+                setTimeout(() => {
+                    $('#verificationForm').submit();
+                }, 500);
+            }
+        });
+        
+        // Handle keyboard navigation
+        codeInput.on('keydown', function(e) {
+            if (e.key === 'Enter' && $(this).val().length === 6) {
+                $('#verificationForm').submit();
+            }
+        });
+        
+        // Session timeout warning
+        let sessionTimeout = 10 * 60; // 10 minutes in seconds
+        const countdownElement = $('<div class="countdown-timer"></div>');
+        $('.verification-container').append(countdownElement);
+        
+        const countdown = setInterval(function() {
+            const minutes = Math.floor(sessionTimeout / 60);
+            const seconds = sessionTimeout % 60;
+            
+            countdownElement.html(`
+                <i class="fas fa-clock"></i>
+                Session expires in: ${minutes}:${seconds.toString().padStart(2, '0')}
+            `);
+            
+            if (sessionTimeout <= 0) {
+                clearInterval(countdown);
+                countdownElement.html(`
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Session expired. Please login again.
+                    </div>
+                `);
+                verifyButton.prop('disabled', true);
+            }
+            
+            sessionTimeout--;
+        }, 1000);
+        
+        // Prevent form resubmission
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    });
+</script>
+{% endblock %}
