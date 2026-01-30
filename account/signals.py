@@ -14,7 +14,10 @@ def create_user_account(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=User)
-def save_user_account(sender, instance, **kwargs):
-    """Save the account when the user is saved"""
-    if hasattr(instance, 'account'):
-        instance.account.save() 
+def save_user_account(sender, instance, created, **kwargs):
+    """Save the account when the user is updated (not on create - account does not exist yet)."""
+    if not created:
+        try:
+            instance.account.save()
+        except Account.DoesNotExist:
+            pass 
