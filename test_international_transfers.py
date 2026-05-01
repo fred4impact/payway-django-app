@@ -1,5 +1,12 @@
 import pytest
 from decimal import Decimal
+import pytest
+from django.contrib.auth import get_user_model
+
+from account.models import Currency, Bank
+from account.forms import InternationalTransferForm
+
+pytestmark = pytest.mark.django_db
 
 from account.models import Currency, Bank
 from account.forms import (
@@ -8,9 +15,41 @@ from account.forms import (
     CurrencyConverterForm,
 )
 
-# Enable database access for all tests in this file
-pytestmark = pytest.mark.django_db
+# # Enable database access for all tests in this file
+# pytestmark = pytest.mark.django_db
+@pytest.fixture
+def sample_currencies():
+    Currency.objects.create(
+        code="USD",
+        name="US Dollar",
+        symbol="$",
+        exchange_rate_to_usd=1.0
+    )
+    Currency.objects.create(
+        code="EUR",
+        name="Euro",
+        symbol="€",
+        exchange_rate_to_usd=0.92
+    )
+    Currency.objects.create(
+        code="GBP",
+        name="British Pound",
+        symbol="£",
+        exchange_rate_to_usd=0.79
+    )
 
+
+@pytest.fixture
+def sample_banks():
+    Bank.objects.create(
+        bank_name="Chase Bank",
+        swift_code="CHASUS33XXX",
+        country="United States"
+    )
+def test_currencies(sample_currencies):
+    assert Currency.objects.count() == 3
+def test_banks(sample_banks):
+    assert Bank.objects.count() == 1
 
 def test_currencies():
     """Test currency data"""
@@ -153,3 +192,5 @@ def test_form_validation():
     invalid_form = InternationalTransferForm(data=invalid_data)
 
     assert not invalid_form.is_valid()
+
+    

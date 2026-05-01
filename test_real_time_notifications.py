@@ -9,6 +9,31 @@ User = get_user_model()
 # Enable database access for all tests in this file
 pytestmark = pytest.mark.django_db
 
+@pytest.fixture
+def sample_users():
+    User = get_user_model()
+
+    john = User.objects.create_user(
+        username="john",
+        email="john@example.com",
+        password="testpass123"
+    )
+
+    sarah = User.objects.create_user(
+        username="sarah",
+        email="sarah@example.com",
+        password="testpass123"
+    )
+
+    mike = User.objects.create_user(
+        username="mike",
+        email="mike@example.com",
+        password="testpass123"
+    )
+
+    return john, sarah, mike
+def test_notification_creation(sample_users):
+    john, sarah, mike = sample_users
 
 def test_notification_creation():
     """Test creating different types of notifications"""
