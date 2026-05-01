@@ -6,51 +6,49 @@ from account.models import Notification
 
 User = get_user_model()
 
-# Enable database access for all tests in this file
 pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture
 def sample_users():
-    User = get_user_model()
+    """Create sample users for notification tests"""
 
     john = User.objects.create_user(
         username="john",
         email="john@example.com",
-        password="testpass123"
+        password="testpass123",
+        first_name="John",
+        last_name="Doe",
     )
 
     sarah = User.objects.create_user(
         username="sarah",
         email="sarah@example.com",
-        password="testpass123"
+        password="testpass123",
+        first_name="Sarah",
+        last_name="Smith",
     )
 
     mike = User.objects.create_user(
         username="mike",
         email="mike@example.com",
-        password="testpass123"
+        password="testpass123",
+        first_name="Mike",
+        last_name="Brown",
     )
 
     return john, sarah, mike
-def test_notification_creation(sample_users):
-    john, sarah, mike = sample_users
 
-def test_notification_creation():
+
+def test_notification_creation(sample_users):
     """Test creating different types of notifications"""
 
-    # Get test users
-    john = User.objects.filter(email="john@example.com").first()
-    sarah = User.objects.filter(email="sarah@example.com").first()
-    mike = User.objects.filter(email="mike@example.com").first()
+    john, sarah, mike = sample_users
 
-    assert john is not None, "john@example.com should exist"
-    assert sarah is not None, "sarah@example.com should exist"
-    assert mike is not None, "mike@example.com should exist"
-
-    # Clear existing notifications for clean test
+    # Clean existing notifications
     Notification.objects.all().delete()
 
-    # Create transaction notification
+    # Transaction notification
     transaction_notification = Notification.objects.create(
         user=sarah,
         notification_type="transaction",
@@ -59,7 +57,7 @@ def test_notification_creation():
         status="unread",
     )
 
-    # Create payment request notification
+    # Payment request notification
     payment_request_notification = Notification.objects.create(
         user=mike,
         notification_type="payment_request",
@@ -68,7 +66,7 @@ def test_notification_creation():
         status="unread",
     )
 
-    # Create KYC notification
+    # KYC notification
     kyc_notification = Notification.objects.create(
         user=john,
         notification_type="kyc",
@@ -77,7 +75,7 @@ def test_notification_creation():
         status="unread",
     )
 
-    # Create security notification
+    # Security notification
     security_notification = Notification.objects.create(
         user=sarah,
         notification_type="security",
@@ -86,7 +84,7 @@ def test_notification_creation():
         status="unread",
     )
 
-    # Create system notification
+    # System notification
     system_notification = Notification.objects.create(
         user=mike,
         notification_type="system",
@@ -104,7 +102,7 @@ def test_notification_creation():
 
     assert Notification.objects.count() == 5
 
-    # Verify unread counts
+    # Verify unread counts per user
     assert Notification.objects.filter(
         user=sarah,
         status="unread"
@@ -121,15 +119,14 @@ def test_notification_creation():
     ).count() == 1
 
 
-def test_notification_mark_read():
+def test_notification_mark_read(sample_users):
     """Test marking notifications as read"""
 
-    user = User.objects.filter(email="john@example.com").first()
-    assert user is not None, "john@example.com should exist"
+    john, _, _ = sample_users
 
     # Create unread notification
     notification = Notification.objects.create(
-        user=user,
+        user=john,
         notification_type="system",
         title="Test Notification",
         message="This is a test notification",
@@ -137,20 +134,20 @@ def test_notification_mark_read():
     )
 
     unread_before = Notification.objects.filter(
-        user=user,
-        status="unread"
+        user=john,
+        status="unread",
     ).count()
 
     assert unread_before >= 1
 
-    # Mark as read
+    # Mark notification as read
     notification.status = "read"
     notification.read_at = timezone.now()
     notification.save()
 
     unread_after = Notification.objects.filter(
-        user=user,
-        status="unread"
+        user=john,
+        status="unread",
     ).count()
 
     updated_notification = Notification.objects.get(id=notification.id)
