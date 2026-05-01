@@ -2,7 +2,7 @@ name: Django CI/CD Pipeline
  
 on:
   push:
-    branches: [ "main", "develop-code", "staging" ]
+    branches: [ "main", "feature-cicd-k8s-argocd", "staging" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
