@@ -1,12 +1,5 @@
 import pytest
 from decimal import Decimal
-import pytest
-from django.contrib.auth import get_user_model
-
-from account.models import Currency, Bank
-from account.forms import InternationalTransferForm
-
-pytestmark = pytest.mark.django_db
 
 from account.models import Currency, Bank
 from account.forms import (
@@ -15,27 +8,40 @@ from account.forms import (
     CurrencyConverterForm,
 )
 
-# # Enable database access for all tests in this file
-# pytestmark = pytest.mark.django_db
+pytestmark = pytest.mark.django_db
+
+
 @pytest.fixture
 def sample_currencies():
     Currency.objects.create(
         code="USD",
         name="US Dollar",
         symbol="$",
-        exchange_rate_to_usd=1.0
+        exchange_rate_to_usd=Decimal("1.00"),
     )
     Currency.objects.create(
         code="EUR",
         name="Euro",
         symbol="€",
-        exchange_rate_to_usd=0.92
+        exchange_rate_to_usd=Decimal("0.92"),
     )
     Currency.objects.create(
         code="GBP",
         name="British Pound",
         symbol="£",
-        exchange_rate_to_usd=0.79
+        exchange_rate_to_usd=Decimal("0.79"),
+    )
+    Currency.objects.create(
+        code="JPY",
+        name="Japanese Yen",
+        symbol="¥",
+        exchange_rate_to_usd=Decimal("149.50"),
+    )
+    Currency.objects.create(
+        code="CAD",
+        name="Canadian Dollar",
+        symbol="C$",
+        exchange_rate_to_usd=Decimal("1.35"),
     )
 
 
@@ -44,19 +50,32 @@ def sample_banks():
     Bank.objects.create(
         bank_name="Chase Bank",
         swift_code="CHASUS33XXX",
-        country="United States"
+        country="United States",
     )
-def test_currencies(sample_currencies):
-    assert Currency.objects.count() == 3
-def test_banks(sample_banks):
-    assert Bank.objects.count() == 1
+    Bank.objects.create(
+        bank_name="Bank of America",
+        swift_code="BOFAUS3NXXX",
+        country="United States",
+    )
+    Bank.objects.create(
+        bank_name="Deutsche Bank",
+        swift_code="DEUTDEFFXXX",
+        country="Germany",
+    )
+    Bank.objects.create(
+        bank_name="BNP Paribas",
+        swift_code="BNPAFRPPXXX",
+        country="France",
+    )
 
-def test_currencies():
+
+def test_currencies(sample_currencies):
     """Test currency data"""
+
     currencies = Currency.objects.all()
 
     assert currencies.exists()
-    assert currencies.count() > 0
+    assert currencies.count() == 5
 
     for currency in currencies:
         assert currency.code is not None
@@ -65,12 +84,13 @@ def test_currencies():
         assert currency.exchange_rate_to_usd is not None
 
 
-def test_banks():
+def test_banks(sample_banks):
     """Test bank data"""
+
     banks = Bank.objects.all()
 
     assert banks.exists()
-    assert banks.count() > 0
+    assert banks.count() == 4
 
     for bank in banks:
         assert bank.swift_code is not None
@@ -78,7 +98,7 @@ def test_banks():
         assert bank.country is not None
 
 
-def test_swift_validation():
+def test_swift_validation(sample_banks):
     """Test SWIFT code validation"""
 
     valid_codes = [
@@ -103,7 +123,7 @@ def test_swift_validation():
         assert bank is None, f"{code} should not exist"
 
 
-def test_fee_calculation():
+def test_fee_calculation(sample_currencies):
     """Test transfer fee calculation"""
 
     test_cases = [
@@ -123,14 +143,14 @@ def test_fee_calculation():
 
         fee = form.calculate_transfer_fee(
             Decimal(str(amount)),
-            currency_code
+            currency_code,
         )
 
         assert fee > 0
         assert isinstance(fee, Decimal)
 
 
-def test_currency_conversion():
+def test_currency_conversion(sample_currencies):
     """Test currency conversion"""
 
     usd = Currency.objects.filter(code="USD").first()
@@ -152,7 +172,7 @@ def test_currency_conversion():
     assert amount_usd_from_eur > 0
 
 
-def test_form_validation():
+def test_form_validation(sample_currencies, sample_banks):
     """Test form validation"""
 
     usd_currency = Currency.objects.get(code="USD")
@@ -174,7 +194,7 @@ def test_form_validation():
 
     fee = form.calculate_transfer_fee(
         Decimal("500"),
-        "USD"
+        "USD",
     )
 
     assert fee > 0
@@ -192,5 +212,3 @@ def test_form_validation():
     invalid_form = InternationalTransferForm(data=invalid_data)
 
     assert not invalid_form.is_valid()
-
-    
