@@ -1,177 +1,135 @@
-#!/usr/bin/env python3
-"""
-Test script for Real-time Notifications feature
-"""
-
-import os
-import sys
-import django
-import time
-from datetime import datetime
-
-# Add the project directory to Python path
-sys.path.append('/Users/mac/Documents/payway-django-app')
-
-# Set up Django environment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'payway.settings')
-django.setup()
-
+import pytest
 from django.contrib.auth import get_user_model
-from account.models import Notification, Account
 from django.utils import timezone
+
+from account.models import Notification
 
 User = get_user_model()
 
+# Enable database access for all tests in this file
+pytestmark = pytest.mark.django_db
+
+
 def test_notification_creation():
     """Test creating different types of notifications"""
-    print("🔔 Testing Real-time Notification System")
-    print("=" * 50)
-    
+
     # Get test users
-    try:
-        john = User.objects.get(email='john@example.com')
-        sarah = User.objects.get(email='sarah@example.com')
-        mike = User.objects.get(email='mike@example.com')
-    except User.DoesNotExist:
-        print("❌ Test users not found. Please run create_test_users command first.")
-        return
-    
-    print(f"✅ Found test users: {john.email}, {sarah.email}, {mike.email}")
-    
+    john = User.objects.filter(email="john@example.com").first()
+    sarah = User.objects.filter(email="sarah@example.com").first()
+    mike = User.objects.filter(email="mike@example.com").first()
+
+    assert john is not None, "john@example.com should exist"
+    assert sarah is not None, "sarah@example.com should exist"
+    assert mike is not None, "mike@example.com should exist"
+
     # Clear existing notifications for clean test
     Notification.objects.all().delete()
-    print("🧹 Cleared existing notifications")
-    
-    # Test 1: Transaction Notification
-    print("\n📊 Test 1: Creating Transaction Notification")
+
+    # Create transaction notification
     transaction_notification = Notification.objects.create(
         user=sarah,
-        notification_type='transaction',
-        title='Money Received',
-        message=f'You received $50.00 from {john.get_full_name()}',
-        status='unread'
+        notification_type="transaction",
+        title="Money Received",
+        message=f"You received $50.00 from {john.get_full_name()}",
+        status="unread",
     )
-    print(f"✅ Created transaction notification for {sarah.email}")
-    
-    # Test 2: Payment Request Notification
-    print("\n📊 Test 2: Creating Payment Request Notification")
+
+    # Create payment request notification
     payment_request_notification = Notification.objects.create(
         user=mike,
-        notification_type='payment_request',
-        title='Payment Request',
-        message=f'{sarah.get_full_name()} requested $25.00 from you',
-        status='unread'
+        notification_type="payment_request",
+        title="Payment Request",
+        message=f"{sarah.get_full_name()} requested $25.00 from you",
+        status="unread",
     )
-    print(f"✅ Created payment request notification for {mike.email}")
-    
-    # Test 3: KYC Notification
-    print("\n📊 Test 3: Creating KYC Notification")
+
+    # Create KYC notification
     kyc_notification = Notification.objects.create(
         user=john,
-        notification_type='kyc',
-        title='KYC Status Updated',
-        message='Your KYC verification has been approved',
-        status='unread'
+        notification_type="kyc",
+        title="KYC Status Updated",
+        message="Your KYC verification has been approved",
+        status="unread",
     )
-    print(f"✅ Created KYC notification for {john.email}")
-    
-    # Test 4: Security Notification
-    print("\n📊 Test 4: Creating Security Notification")
+
+    # Create security notification
     security_notification = Notification.objects.create(
         user=sarah,
-        notification_type='security',
-        title='Security Alert',
-        message='New login detected from a new device',
-        status='unread'
+        notification_type="security",
+        title="Security Alert",
+        message="New login detected from a new device",
+        status="unread",
     )
-    print(f"✅ Created security notification for {sarah.email}")
-    
-    # Test 5: System Notification
-    print("\n📊 Test 5: Creating System Notification")
+
+    # Create system notification
     system_notification = Notification.objects.create(
         user=mike,
-        notification_type='system',
-        title='System Maintenance',
-        message='Scheduled maintenance will occur tonight at 2 AM',
-        status='unread'
+        notification_type="system",
+        title="System Maintenance",
+        message="Scheduled maintenance will occur tonight at 2 AM",
+        status="unread",
     )
-    print(f"✅ Created system notification for {mike.email}")
-    
-    # Display notification counts
-    print("\n📈 Notification Summary:")
-    print("-" * 30)
-    for user in [john, sarah, mike]:
-        unread_count = Notification.objects.filter(user=user, status='unread').count()
-        total_count = Notification.objects.filter(user=user).count()
-        print(f"{user.email}: {unread_count} unread, {total_count} total")
-    
-    # Test notification types distribution
-    print("\n📊 Notification Types Distribution:")
-    print("-" * 35)
-    for notification_type in ['transaction', 'payment_request', 'kyc', 'security', 'system']:
-        count = Notification.objects.filter(notification_type=notification_type).count()
-        print(f"{notification_type}: {count}")
-    
-    print("\n🎉 Real-time Notification System Test Complete!")
-    print("\n💡 To test real-time updates:")
-    print("1. Open the PayWay application in your browser")
-    print("2. Log in as any test user")
-    print("3. Check the notification bell in the navigation")
-    print("4. The notification count should update automatically")
-    print("5. New notifications should appear as toast messages")
+
+    # Assertions
+    assert transaction_notification is not None
+    assert payment_request_notification is not None
+    assert kyc_notification is not None
+    assert security_notification is not None
+    assert system_notification is not None
+
+    assert Notification.objects.count() == 5
+
+    # Verify unread counts
+    assert Notification.objects.filter(
+        user=sarah,
+        status="unread"
+    ).count() == 2
+
+    assert Notification.objects.filter(
+        user=mike,
+        status="unread"
+    ).count() == 2
+
+    assert Notification.objects.filter(
+        user=john,
+        status="unread"
+    ).count() == 1
+
 
 def test_notification_mark_read():
     """Test marking notifications as read"""
-    print("\n🔔 Testing Mark as Read Functionality")
-    print("=" * 40)
-    
-    # Get a user with unread notifications
-    user_with_notifications = Notification.objects.filter(status='unread').first()
-    if not user_with_notifications:
-        print("❌ No unread notifications found")
-        return
-    
-    user = user_with_notifications.user
-    unread_before = Notification.objects.filter(user=user, status='unread').count()
-    
-    print(f"📊 {user.email} has {unread_before} unread notifications")
-    
-    # Mark first notification as read
-    first_notification = Notification.objects.filter(user=user, status='unread').first()
-    if first_notification:
-        first_notification.status = 'read'
-        first_notification.read_at = timezone.now()
-        first_notification.save()
-        print(f"✅ Marked notification '{first_notification.title}' as read")
-    
-    unread_after = Notification.objects.filter(user=user, status='unread').count()
-    print(f"📊 {user.email} now has {unread_after} unread notifications")
-    
-    if unread_after < unread_before:
-        print("✅ Mark as read functionality working correctly")
-    else:
-        print("❌ Mark as read functionality failed")
 
-def cleanup_test_notifications():
-    """Clean up test notifications"""
-    print("\n🧹 Cleaning up test notifications...")
-    count = Notification.objects.count()
-    Notification.objects.all().delete()
-    print(f"✅ Deleted {count} test notifications")
+    user = User.objects.filter(email="john@example.com").first()
+    assert user is not None, "john@example.com should exist"
 
-if __name__ == "__main__":
-    try:
-        test_notification_creation()
-        test_notification_mark_read()
-        
-        # Ask if user wants to clean up
-        response = input("\n🧹 Do you want to clean up test notifications? (y/n): ")
-        if response.lower() in ['y', 'yes']:
-            cleanup_test_notifications()
-        else:
-            print("📝 Test notifications preserved for manual testing")
-            
-    except Exception as e:
-        print(f"❌ Error during testing: {e}")
-        import traceback
-        traceback.print_exc()
+    # Create unread notification
+    notification = Notification.objects.create(
+        user=user,
+        notification_type="system",
+        title="Test Notification",
+        message="This is a test notification",
+        status="unread",
+    )
+
+    unread_before = Notification.objects.filter(
+        user=user,
+        status="unread"
+    ).count()
+
+    assert unread_before >= 1
+
+    # Mark as read
+    notification.status = "read"
+    notification.read_at = timezone.now()
+    notification.save()
+
+    unread_after = Notification.objects.filter(
+        user=user,
+        status="unread"
+    ).count()
+
+    updated_notification = Notification.objects.get(id=notification.id)
+
+    assert unread_after == unread_before - 1
+    assert updated_notification.status == "read"
+    assert updated_notification.read_at is not None
