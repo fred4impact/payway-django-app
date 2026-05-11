@@ -20,8 +20,17 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
+from core import views as core_views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Kubernetes / observability (see docs/k8s.md and docker-compose healthcheck)
+    path('health/', core_views.health_liveness, name='health_liveness'),
+    path('ready/', core_views.health_readiness, name='health_readiness'),
+    path('actuator/health/', core_views.actuator_health, name='actuator_health'),
+    path('actuator/health/liveness/', core_views.health_liveness, name='actuator_health_liveness'),
+    path('actuator/health/readiness/', core_views.health_readiness, name='actuator_health_readiness'),
+    path('api/', core_views.api_discovery, name='api_discovery'),
     path('', include('core.urls')),
     path('auth/', include('userauths.urls')),
     path('account/', include('account.urls')),
