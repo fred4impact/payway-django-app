@@ -1,0 +1,219 @@
+name: Django CI/CD Pipeline
+ 
+on:
+  push:
+    branches: [ "main", "feature-cicd-k8s-argocd", "staging" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      run_build:
+        description: 'Run Code Build stage'
+        type: boolean
+        default: true
+      run_coverage:
+        description: 'Run Code Coverage stage'
+        type: boolean
+        default: true
+      run_sca:
+        description: 'Run SCA (Dependency Audit)'
+        type: boolean
+        default: true
+      run_sast:
+        description: 'Run SAST (Bandit static analysis)'
+        type: boolean
+        default: true
+      run_sonar:
+        description: 'Run SonarQube Quality Gate'
+        type: boolean
+        default: true
+      run_docker_build:
+        description: 'Run Docker Build stage'
+        type: boolean
+        default: true
+      run_image_scan:
+        description: 'Run Docker Image Scan (Trivy)'
+        type: boolean
+        default: true
+      run_image_push:
+        description: 'Push image to Docker Hub'
+        type: boolean
+        default: true
+      image_tag:
+        description: 'Custom Docker image tag (default: git SHA)'
+        type: string
+        default: ''
+ 
+env:
+  PYTHON_VERSION: '3.11'
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/payway-django-app
+  IMAGE_TAG: ${{ github.event.inputs.image_tag || github.sha }}
+ 
+# ─────────────────────────────────────────────────────────────
+# STAGE 1 — CODE BUILD
+# ─────────────────────────────────────────────────────────────
+jobs:
+  build:
+    name: 🔨 Code Build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_build }}
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+ 
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+ 
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+ 
+      - name: Generate pip cache key
+        id: cache-key
+        run: echo "key=pip-${{ runner.os }}-${{ hashFiles('**/requirements*.txt') }}" >> $GITHUB_OUTPUT
+ 
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: pip-${{ runner.os }}-
+ 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-django bandit safety
+ 
+      - name: Validate Django configuration
+        env:
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY || 'ci-dummy-secret-key-not-for-production' }}
+          DEBUG: 'True'
+          DATABASE_URL: 'sqlite:///db.sqlite3'
+        run: |
+          python manage.py check --deploy || python manage.py check
+          python manage.py migrate --run-syncdb
+ 
+      - name: Cache source + venv for downstream jobs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .
+            ~/.cache/pip
+          key: src-${{ github.sha }}
+
+         # ─────────────────────────────────────────────────────────────
+# STAGE 2 — CODE COVERAGE (pytest + pytest-cov)
+# ─────────────────────────────────────────────────────────────
+  coverage:
+    name: 🧪 Code Coverage
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_coverage }}
+ 
+    steps:
+      - name: Restore source cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .
+            ~/.cache/pip
+          key: src-${{ github.sha }}
+ 
+      - name: Checkout source (fallback)
+        uses: actions/checkout@v4
+ 
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+ 
+      - name: Install test dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-django
+ 
+      - name: Run tests with coverage
+        env:
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY || 'ci-dummy-secret-key-not-for-production' }}
+          DEBUG: 'True'
+          DATABASE_URL: 'sqlite:///db.sqlite3'
+          DJANGO_SETTINGS_MODULE: payway.settings
+        run: |
+          pytest \
+            --cov=. \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:coverage-html \
+            --cov-report=term-missing \
+            --cov-fail-under=30 \
+            -v \
+            --tb=short
+ 
+      - name: Upload coverage XML (for SonarQube)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            coverage-html/
+ 
+      - name: Coverage summary
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          python -m coverage report --skip-covered 2>/dev/null || true
+ 
+
+# ─────────────────────────────────────────────────────────────
+# STAGE 3 — SCA (Software Composition Analysis)
+# ─────────────────────────────────────────────────────────────
+  sca:
+    name: 🔍 SCA – Dependency Audit
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_sca }}
+ 
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+ 
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+ 
+      - name: Install safety
+        run: pip install safety
+ 
+      - name: Run pip-audit (SCA)
+        run: |
+          pip install pip-audit
+          pip install -r requirements.txt
+          pip-audit \
+            --requirement requirements.txt \
+            --format json \
+            --output pip-audit-report.json || true
+          pip-audit \
+            --requirement requirements.txt \
+            --format cyclonedx-json \
+            --output sbom.json || true
+ 
+      - name: Run Safety check (CVE database)
+        run: |
+          safety check \
+            --file requirements.txt \
+            --output json \
+            --save-json safety-report.json \
+            --continue-on-error || true
+          safety check --file requirements.txt --short-report
+ 
+      - name: Upload SCA reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: sca-reports
+          path: |
+            pip-audit-report.json
+            safety-report.json
+            sbom.json
+ 
+ 

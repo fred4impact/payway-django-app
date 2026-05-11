@@ -2,6 +2,14 @@
 
 A secure, modern digital payment platform built with Django, featuring user authentication, KYC verification, and AI-powered fraud detection.
 
+## 📸 Screenshots
+
+| Home | Dashboard | Login | KYC |
+|------|-----------|-------|-----|
+| ![Home](screenshots/home.png) | ![Dashboard](screenshots/dashboard.png) | ![Login](screenshots/login.png) | ![KYC](screenshots/kyc.png) |
+
+*Add your app screenshots to the `screenshots/` folder. Use the filenames above or update the paths in this section.*
+
 ## 🚀 Features
 
 ### ✅ Completed (Sprint 1-2)
@@ -97,6 +105,14 @@ python manage.py runserver
 ### 8. Access the Application
 - **Main Site**: http://127.0.0.1:8000/
 - **Admin Panel**: http://127.0.0.1:8000/admin/
+
+### Running with Docker
+```bash
+make up          # Start services (web, db, redis, nginx)
+make migrate     # Apply migrations to PostgreSQL (required after first up or fresh DB)
+make collectstatic   # Collect static files (optional)
+```
+For first-time setup, use **`make setup`** — it builds, starts services, runs migrations, and collects static files. If you only run `make up`, run **`make migrate`** so the database has all tables (otherwise you may see "relation does not exist" / 500 on register or login).
 
 ## 📁 Project Structure
 

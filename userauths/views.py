@@ -6,15 +6,20 @@ from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.db.models import Q
 from django.core.paginator import Paginator
+from django.conf import settings
+import logging
+
 from .forms import (
     UserRegisterForm, UserLoginForm, TwoFactorSetupForm, TwoFactorVerifyForm,
     TwoFactorBackupCodeForm, TwoFactorDisableForm, SecuritySettingsForm,
     DeviceTrustForm, SecurityLogFilterForm
 )
 from .services import SecurityService
-from .models import TwoFactorAuth, UserDevice, SecurityLog, AccountLockout
+from .models import User, TwoFactorAuth, UserDevice, SecurityLog, AccountLockout
 from .forms import generate_totp_secret, generate_totp_qr_code, verify_totp_code, generate_backup_codes
 import json
+
+logger = logging.getLogger(__name__)
 
 
 def register_view(request):
@@ -35,15 +40,15 @@ def register_view(request):
                         risk_score=SecurityService.assess_risk_score(request, user)
                     )
                 except Exception as e:
-                    # Log the error but don't fail registration
-                    print(f"Security logging failed: {e}")
+                    logger.exception("Security logging failed after registration")
                 
                 messages.success(request, 'Account created successfully!')
                 return redirect('core:dashboard')
             except Exception as e:
-                # Log the error
-                print(f"Registration failed: {e}")
+                logger.exception("Registration failed")
                 messages.error(request, 'Registration failed. Please try again.')
+                if settings.DEBUG:
+                    raise
         else:
             # Log failed registration attempt
             try:
@@ -51,12 +56,11 @@ def register_view(request):
                     user=None,
                     event_type='registration_failed',
                     request=request,
-                    details={'errors': form.errors},
+                    details={'errors': dict(form.errors)},
                     risk_score=SecurityService.assess_risk_score(request)
                 )
             except Exception as e:
-                # Log the error but don't fail the form display
-                print(f"Security logging failed: {e}")
+                logger.exception("Security logging failed on registration_failed")
     else:
         form = UserRegisterForm()
     
