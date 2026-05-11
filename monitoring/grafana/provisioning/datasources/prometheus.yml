@@ -1,0 +1,27 @@
+# monitoring/prometheus.yml
+# Prometheus scrape configuration for PayWay k6 load testing
+
+global:
+  scrape_interval:     5s   # scrape every 5s (k6 tests are short-lived)
+  evaluation_interval: 5s
+
+scrape_configs:
+
+  # ── k6 metrics (exposed by k6 --out experimental-prometheus-rw or statsd)
+  # k6 exposes a Prometheus-compatible /metrics endpoint on port 5656
+  # when run with: K6_PROMETHEUS_RW_SERVER_URL or the prometheus output.
+  # We use the k6 prometheus-rw built-in output below.
+  - job_name: 'k6'
+    static_configs:
+      - targets: ['host.docker.internal:5656']  # k6 runs on host, not in Docker
+    metrics_path: '/metrics'
+    scrape_interval: 2s   # faster scrape during active test runs
+
+  # ── Django/nginx health endpoints (optional — gives app-side view)
+  - job_name: 'payway_health'
+    static_configs:
+      - targets: ['nginx:80']    # use your nginx container name
+    metrics_path: '/ready/'
+    scrape_interval: 10s
+    # NOTE: /ready/ returns JSON not Prometheus format — this just checks
+    # it stays 200. For real app metrics add django-prometheus to your app.

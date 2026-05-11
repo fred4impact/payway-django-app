@@ -1,0 +1,33 @@
+# monitoring/prometheus.yml
+
+global:
+  scrape_interval:     5s
+  evaluation_interval: 5s
+
+# ── Remote-write receiver ────────────────────────────────────────────────────
+# k6 pushes metrics here via:
+#   K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write
+#   k6 run --out experimental-prometheus-rw your-test.js
+#
+# Enabled by --web.enable-remote-write-receiver in docker-compose.yml.
+
+scrape_configs:
+
+  # ── Django app (via shared monitoring network) ──────────────────────────────
+  - job_name: 'payway_django'
+    static_configs:
+      - targets: ['payway-web:8000']   # container name resolves inside Docker
+    metrics_path: '/health/'
+    scrape_interval: 10s
+
+  # ── Nginx (via shared monitoring network) ──────────────────────────────────
+  - job_name: 'payway_nginx'
+    static_configs:
+      - targets: ['payway-nginx:80']   # container name resolves inside Docker
+    metrics_path: '/health/'
+    scrape_interval: 10s
+
+  # ── Prometheus self-monitoring ─────────────────────────────────────────────
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

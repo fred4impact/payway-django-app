@@ -9,14 +9,16 @@ django-filter==23.3
 cryptography==41.0.7
 pyotp==2.9.0
 qrcode==7.4.2
+whitenoise==6.6.0
 
 # Production dependencies
 gunicorn==21.2.0
 gevent==23.9.1
 psycopg2-binary==2.9.9
-redis==5.0.1
+redis==4.6.0
 dj-database-url==2.1.0
 
-# Optional: Celery for background tasks (uncomment if needed)
-# celery[redis]==5.3.4
-# django-celery-beat==2.5.0 
+# Background task processing (used by docker-compose `celery` services)
+celery[redis]==5.3.4
+django-celery-beat==2.9.0
+django-celery-results==2.6.0
