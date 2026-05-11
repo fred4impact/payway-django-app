@@ -5,8 +5,13 @@ A secure, modern digital payment platform built with Django, featuring user auth
 ## 📸 Screenshots
 
 | Home | Dashboard | Login | KYC |
-|------|-----------|-------|-----|
-| ![Home](screenshots/home.png) | ![Dashboard](screenshots/dashboard.png) | ![Login](screenshots/login.png) | ![KYC](screenshots/kyc.png) |
+
+
+
+ ![Home](screenshots/home.png) 
+ ![Dashboard](screenshots/dashboard.png) 
+ ![Login](screenshots/login.png) 
+ ![KYC](screenshots/kyc.png) 
 
 *Add your app screenshots to the `screenshots/` folder. Use the filenames above or update the paths in this section.*
 

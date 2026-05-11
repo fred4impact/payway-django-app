@@ -1,0 +1,14 @@
+# monitoring/grafana/provisioning/dashboards/default.yml
+# Tells Grafana to load dashboards from the dashboards folder.
+
+apiVersion: 1
+
+providers:
+  - name: 'PayWay k6'
+    orgId: 1
+    folder: 'k6 Load Tests'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards

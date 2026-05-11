@@ -14,8 +14,8 @@ export const options = {
   scenarios: {
     smoke: {
       executor: 'per-vu-iterations',
-      vus: 1,
-      iterations: 1,
+      vus: 5,
+      iterations: 4,
       maxDuration: '60s',
     },
   },

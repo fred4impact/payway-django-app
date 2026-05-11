@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ADD these services to your existing docker-compose.yml
+# Also add the "monitoring" network to any existing services that need to
+# be scraped (e.g. your Django "web" service).
+#
+# Full merge example at the bottom of this file.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: payway_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"           # Prometheus UI → http://localhost:9090
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"   # keep 7 days locally
+      - "--web.enable-lifecycle"              # allows POST /-/reload
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: payway_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"           # Grafana UI → http://localhost:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin   # change this
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring:
+    driver: bridge
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ALSO: add the monitoring network to your existing "web" (Django/nginx) service
+# so Prometheus can reach it. Example:
+#
+#   services:
+#     web:
+#       ...
+#       networks:
+#         - default       # your existing network
+#         - monitoring    # add this
+#
+# ─────────────────────────────────────────────────────────────────────────────
