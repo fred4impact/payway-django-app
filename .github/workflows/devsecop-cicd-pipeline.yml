@@ -247,6 +247,6 @@ jobs:
           pip install bandit
 
       - name: Run Bandit
+        continue-on-error: true
         run: |
           bandit -r . -x tests
-          continue-on-error: true
