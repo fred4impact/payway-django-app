@@ -1,0 +1,12 @@
+Django==5.2.12
+django-jazzmin==3.0.1
+Pillow==11.3.0
+python-decouple==3.8
+django-crispy-forms==2.0
+crispy-bootstrap5==0.7
+django-cors-headers==4.3.0
+django-filter==23.3
+cryptography==41.0.7
+pyotp==2.9.0
+qrcode==7.4.2
+whitenoise==6.6.0
