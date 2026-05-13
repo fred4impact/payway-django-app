@@ -229,7 +229,7 @@ jobs:
   #########################################################
 
   sast_scan:
-    name: 🔐 SAST Scan
+    name: 🔐 Sast Scan
     runs-on: ubuntu-latest
     needs: sca_scan
 
@@ -256,9 +256,12 @@ jobs:
   ################################
 
   docker_build:
-    name: Docker Build
+    name: 🐳 Docker Build
     runs-on: ubuntu-latest
     needs: sast_scan
+
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ github.sha }}
 
     steps:
       - name: Checkout Source
