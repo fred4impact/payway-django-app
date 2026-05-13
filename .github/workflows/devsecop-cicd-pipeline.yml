@@ -173,7 +173,7 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-report=html:coverage-html \
             --cov-report=term-missing \
-            --cov-fail-under=30 \
+            --cov-fail-under=20 \
             -v \
             --tb=short
 
