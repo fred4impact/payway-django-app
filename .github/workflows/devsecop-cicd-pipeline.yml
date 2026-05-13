@@ -136,7 +136,7 @@ jobs:
   coverage:
     name: 📊 Code Coverage
     runs-on: ubuntu-latest
-    needs: build
+    needs: unit_test
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_coverage }}
 
     steps:
@@ -224,4 +224,28 @@ jobs:
         run: |
           pip-audit -r requirements.txt
 
-#########################################################
+  #########################################################
+  # SAST
+  #########################################################
+
+  sast_scan:
+    name: 🔐 SAST Scan
+    runs-on: ubuntu-latest
+    needs: sca_scan
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Bandit
+        run: |
+          pip install bandit
+
+      - name: Run Bandit
+        run: |
+          bandit -r . -x tests
