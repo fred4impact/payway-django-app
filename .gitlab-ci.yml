@@ -1,0 +1,71 @@
+workflow:
+  name: "Payway DevSecOps Pipeline"
+
+image: python:3.12
+
+stages:
+- build
+- unit-test
+- coverage
+- sca 
+- sast
+- quality_gate
+- image_build
+- image_scan 
+- image_push 
+
+########################
+# CI VARIABLES
+########################
+variables:
+  APP_NAME: "payway"
+  PYTHONUNBUFFERED: "1"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+  IMAGE_NAME: "${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+########################
+# Default for all 
+########################
+
+# default:
+#   tags:
+#     - aws-ec2-runner
+
+cache:
+  paths:
+    - .cache/pip
+#########################################################
+# Build Stage
+#########################################################
+Build:
+ stage: build
+#  image: python:3.12
+
+ before_script:
+  - python --version
+  - pip install --upgrade pip
+
+ script:
+   - pip install -r requirements.txt
+   - python manage.py check
+
+#########################################################
+# Unit Test  Stage
+#########################################################
+unit_test:
+  stage: unit_test
+
+  image: python:3.12
+
+  before_script:
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install pytest pytest-django
+
+  script:
+    - pytest
+
+#########################################################
+#SCA  Stage
+#########################################################
