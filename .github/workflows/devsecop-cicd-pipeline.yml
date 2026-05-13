@@ -248,5 +248,5 @@ jobs:
 
       - name: Run Bandit
         run: |
-          bandit -r . -x tests -s B104
+          bandit -r . -x tests
           continue-on-error: true
